@@ -1,0 +1,134 @@
+{# HTML pieces the pages share: the class switch, collapsible section chevrons and the double chevron, DIM and purge buttons, icons and armor tiles. #}
+
+{# The class buttons; the caller gives each button's count. #}
+{% macro class_switch(classes) %}
+<div class="switch" role="group" aria-label="Class" data-key="cls">
+{% for k in classes %}
+<button type="button" data-value="{{ k.armor_class }}" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}">{{ k.armor_class }} <span class="num">{{ caller(k) }}</span></button>
+{% endfor %}
+</div>
+{% endmacro %}
+
+{# The chevron that leads a collapsible section's summary line. #}
+{% macro chevron() %}<svg class="chev" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>{% endmacro %}
+
+{# The double chevron that rolls a group down or up: a section, every section in it and every card in them open or close together. It turns down while they are open (open, at first). #}
+{% macro expand(open=false) %}
+{% set label %}{% if open %}Collapse all{% else %}Expand all{% endif %}{% endset %}
+<button type="button" class="expand" aria-expanded="{{ open|lower }}" aria-label="{{ label }}" title="{{ label }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6"></path><path d="M12 6l6 6-6 6"></path></svg></button>
+{%- endmacro %}
+
+{# A button that copies the DIM query for rows' copies. #}
+{% macro dim_button(rows, label) %}
+<button type="button" class="dim" data-q="{{ rows|dim }}">{{ label }}</button>
+{% endmacro %}
+
+{# A button that copies the DIM query for rows' copies to purge, in the purge colour. #}
+{% macro purge_button(rows) %}
+<button type="button" class="dim purge" data-q="{{ rows|dim }}">Copy purge IDs</button>
+{% endmacro %}
+
+{# A 16px line icon: the lock, or a DIM tag's (the shapes of DIM's own tag
+   icons). #}
+{% macro icon(name, label) %}
+{% set shapes = {
+    'locked': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    'favorite': '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+    'keep': '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/>',
+    'infuse': '<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>',
+    'junk': '<circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/>',
+    'archive': '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/>',
+} %}
+<svg role="img" aria-label="{{ label }}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ shapes[name]|safe }}</svg>
+{% endmacro %}
+
+{# One of a piece's stats as its icon and value, boxed when its tuning
+   socket can raise it, and then greyed if the piece has 0. #}
+{% macro stat(p, key, tuned) %}<span{% if tuned %} class="tuned{% if not p[key] %} zero{% endif %}"{% endif %} title="{{ stat_names[key] }}"><img src="{{ stat_icons[key] }}" alt="{{ stat_names[key] }}" width="16" height="16">{{ p[key] }}</span>{% endmacro %}
+
+{# A piece's non-zero stats, then any stat its tuning can raise that it
+   doesn't roll. #}
+{% macro stats(p) %}
+{% set tuned = (p.tuning or '').split(',') %}
+<span class="stats">{% for key in stat_short if p[key] %}{{ stat(p, key, key in tuned) }}{% endfor %}{% for key in stat_short if key in tuned and not p[key] %}{{ stat(p, key, true) }}{% endfor %}</span>
+{% endmacro %}
+
+{# A scored piece: score, Purge (Dupe for an exact copy) or a Keep: badge with
+   the stat icons of each build it is kept for, stats, what tuning adds to the
+   score, an optional note, and on the right its gear tier's pips when the
+   row has them. #}
+{% macro tile(p, note='') %}
+{% set purge = p.reason and not p.rescued %}
+<div class="tile{% if purge %} purge{% elif p.rescued %} rescued{% endif %}">
+<div class="tile-top"><span class="score">{{ p.score|int }}</span>
+{% if p.reason == 'equal_same_set' %}
+<span class="chip">Dupe</span>
+{% elif purge %}
+<span class="chip">Purge</span>
+{% elif p.rescued %}
+<span class="keeps">{% for build in p.builds.split(';') %}<span class="chip keep">Keep:{% for key in build.split(',') %}<img src="{{ stat_icons[key] }}" alt="{{ stat_names[key] }}" title="{{ stat_names[key] }}">{% endfor %}</span>{% endfor %}</span>
+{% endif %}
+</div>
+{{ stats(p) }}
+{% if p.tuning_gain %}
+<span class="tuning">+{{ p.tuning_gain|int }} from tuning</span>
+{% endif %}
+{% if note %}
+<span class="note">{{ note }}</span>
+{% endif %}
+{% if p.tier_overlay %}
+<img class="tier" src="{{ p.tier_overlay }}" alt="Gear tier {{ p.gear_tier }}" title="Gear tier {{ p.gear_tier }}">
+{% endif %}
+</div>
+{% endmacro %}
+
+{# A perk grid's row: its perk named by its plug (data-tip: its tooltip and icon), each side's heat (aN, bN; an or bn without scores), place (data-r), share (data-a, data-b, — when unvoted, absent without scores) and quiet trait (qa, qb), the wishlists naming it (data-l), and own for a perk only a copy has; on a weapons card the copies with it (data-o) and those whose completed rolls name it (data-h, k:places). #}
+{% macro grid_row(p) %}<li class="pk {% if p.pve_heat is none %}an{% else %}a{{ p.pve_heat }}{% endif %} {% if p.pvp_heat is none %}bn{% else %}b{{ p.pvp_heat }}{% endif %}{% if p.pve_quiet %} qa{% endif %}{% if p.pvp_quiet %} qb{% endif %}{% if p.own %} own{% endif %}" data-tip="p{{ p.plug_hash }}" data-r="{{ p.pve_pos }} {{ p.pvp_pos }}"{% if p.pve_rel is not none %} data-a="{{ p.pve_share|pct }}"{% endif %}{% if p.pvp_rel is not none %} data-b="{{ p.pvp_share|pct }}"{% endif %}{% if p.lists %} data-l="{{ p.lists }}"{% endif %}{% if p.owners %} data-o="{{ p.owners }}"{% endif %}{% if p.hits %} data-h="{{ p.hits }}"{% endif %}><span>{{ p.perk }}</span></li>{% endmacro %}
+
+{# A trait pair's line, drawn when shown: its traits' plugs (data-a, data-b); per side with pair scores the pair's rank, rel and share (0 each where players weren't seen with it) and its verdict (g, b or m); and on a weapons card the copies that can make it (data-c) and the places of the lists naming it in a roll (data-w) or a trash roll (data-t). #}
+{% macro pair_path(p) %}<path data-a="p{{ p.a }}" data-b="p{{ p.b }}"{% for side in ('pve', 'pvp') if p[side ~ '_verdict'] %}{% if p[side ~ '_rank'] %} data-{{ side }}="{{ p[side ~ '_rank'] }} {{ p[side ~ '_rel']|round(4) }} {{ p[side ~ '_share']|round(4) }} {{ p[side ~ '_verdict'] }}"{% else %} data-{{ side }}="0 0 0 {{ p[side ~ '_verdict'] }}"{% endif %}{% endfor %}{% if p.copies %} data-c="{{ p.copies }}"{% endif %}{% if p.wanted %} data-w="{{ p.wanted }}"{% endif %}{% if p.trash %} data-t="{{ p.trash }}"{% endif %}></path>{% endmacro %}
+
+{# The details line under a weapon's grid for one side, in two columns: its hard content's copies and votes above its normal content's, and its shares' margin of error (the widest 95% range's half; none for a fixed roll) above when a copy was last observed. #}
+{% macro meta_line(w) %}
+<p class="pop-meta on-{{ w.side }}"><span><b>Hard content:</b> {{ '{:,}'.format(w.hard_copies) }} copies, {{ w.hard_votes|round|int }} effective votes</span><span><b>Margin of error:</b> {% if w.margin is none %}None: a fixed roll, nothing to pick{% else %}up to ±{{ (w.margin * 100)|round|int }} points{% endif %}</span><span><b>Normal content:</b> {{ '{:,}'.format(w.normal_copies) }} copies, {{ w.normal_votes|round|int }} effective votes</span><span><b>Last observed:</b> {{ w.last_seen|day }}</span></p>
+{% endmacro %}
+
+{# A weapon's confidence on a side, its weakest column's, in that level's heat, with any extra class; its tooltip gives the maths. #}
+{% macro confidence_chip(confidence, side, grid_id, cls='') %}
+{% set heat = {'high': 'hi', 'medium': 'mid', 'low': 'lo', 'very low': 'vlo'} %}
+{% if confidence %}<span class="pop-chip heat-{{ heat[confidence] }}{% if cls %} {{ cls }}{% endif %}" tabindex="0" data-tip="c-{{ side }}-{{ grid_id }}">{{ confidence|capitalize }} confidence</span>{% endif %}
+{% endmacro %}
+
+{# A weapon's Endgame badges, PvE above PvP, each where hard content clears the bar on that side; the badge leads with its side's activity icon. #}
+{% macro endgame_badges(w) %}
+{% if w.pve_endgame or w.pvp_endgame %}<span class="endgame">{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) if w[side ~ '_endgame'] %}<span class="cert {{ side }}" tabindex="0" data-tip="e-{{ side }}-{{ w.grid_id }}"><span class="cert-icon" aria-hidden="true"></span>{{ label }} Endgame</span>{% endfor %}</span>{% endif %}
+{% endmacro %}
+
+{# A sample of a pair line for the legend, in a colour or the heat scale's gradient (#heat-line, in grids.html.j2), dashed for a pair the copy can't make. #}
+{% macro line_sample(stroke, dashed=false) %}<svg class="links" width="34" height="12" aria-hidden="true"><path d="M2 10 C17 10 17 2 32 2" stroke-width="2.5" style="stroke:{{ stroke }}{% if dashed %};stroke-dasharray:6 5{% endif %}"></path></svg>{% endmacro %}
+
+{# The perk grids' legend: heat, wishlist rings, the copy's outline and the pair lines, with a copy shown (the weapons page) or without (Popular). #}
+{% macro legend(with_copy) %}
+<div class="legend2">
+<div><span class="lg-title">Perk heat</span><div class="heat-bar" aria-hidden="true"></div><div class="heat-ends"><span>rarely picked</span><span>favourite</span></div><span class="note">Share of the column's votes, against its most picked perk</span></div>
+<div><span class="lg-title">Wishlists</span>
+{% if with_copy %}
+<div class="lg-row"><i class="perk hit" aria-hidden="true"></i>In a wishlist roll this copy completes</div>
+<div class="lg-row"><i class="perk named" aria-hidden="true"></i>Named by a roll it doesn't complete</div>
+<div class="lg-row"><i class="row-swatch" aria-hidden="true"></i>This copy's perks</div>
+{% else %}
+<div class="lg-row"><i class="perk pick" aria-hidden="true"></i>Named by a wishlist roll</div>
+{% endif %}
+</div>
+<div><span class="lg-title">Trait pairs</span>
+{% if with_copy %}
+<div class="lg-row">{{ line_sample('url(#heat-line)') }}This copy's wanted and unwanted pairs, by how often players pick them</div>
+<div class="lg-row">{{ line_sample('var(--bad)') }}A pair a wishlist trashes</div>
+<div class="lg-row">{{ line_sample('var(--heat-hi)', true) }}Most picked pairs this copy can't make</div>
+{% else %}
+<div class="lg-row">{{ line_sample('url(#heat-line)') }}The three most picked pairs, by how often players pick them</div>
+{% endif %}
+<span class="note">Less picked pairs fade. Hover a trait for its partners, or click it to pin them.</span>
+</div>
+</div>
+{% endmacro %}

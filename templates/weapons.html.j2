@@ -1,0 +1,223 @@
+{# Weapons: the true duplicates (and any copy below Legendary), then Roll Quality: a card per weapon with a copy left (the weapon d2-perk-popularity scores its version as, else its family), or with the switches only those with more than one copy (the ones to review) or a wishlist's rolls. A card opens on its copies, best by popularity first, beside the weapon's perk grid (grids.html.j2) showing the picked copy. #}
+{% import 'macros.html.j2' as m with context %}
+{% import 'text.j2' as t with context %}
+
+{# A flagged copy's tile: its name and reason, type and id, and the copy kept in its place, with a button that opens the keeper's card in Roll Quality (report.js). #}
+{% macro flag_tile(w) %}
+<div class="tile purge">
+<div class="tile-top"><span class="name">{{ w.name }}</span><span class="chip">{{ weapon_reasons[w.reason] }}</span></div>
+<span class="tuning">{{ w.wtype }} · …{{ w.instance_id[-6:] }}</span>
+{% if w.keeper_id %}
+<span class="note">kept in its place: …{{ w.keeper_id[-6:] }}</span>
+{% endif %}
+{% if w.grid_id %}
+<button type="button" class="goto" data-goto="{{ w.grid_id }}" data-k="{{ w.keeper_k }}">My Copies</button>
+{% endif %}
+</div>
+{% endmacro %}
+
+{# A section's card count, which the weapons switches update to the cards showing. #}
+{% macro count(rows) %}<span class="num count">{{ rows|map(attribute='card')|unique|list|length }}</span>{% endmacro %}
+
+{# A copy's kill count, as DIM shows it: the count of the tracker plugged into its tracker socket, behind the badge of what it counts (PvE, PvP or Gambit). #}
+{% macro kill_count(c) %}<span class="kill" title="{{ c.kill_kind }} kills ({{ c.kill_tracker }})">{% if c.kill_icon %}<img src="{{ c.kill_icon }}" alt="{{ c.kill_kind }}" loading="lazy">{% endif %}{{ '{:,}'.format(c.kills) }}</span>{% endmacro %}
+
+{# A weapon's season, with its release date in its tooltip, and where it drops underneath; each left out when unknown. #}
+{% macro origin(c) %}{% if c.season_name or c.source %}<span class="origin">{% if c.season_name %}<span title="Released {{ c.season_date }}">{{ t.season(c) }}</span>{% endif %}{% if c.source %}<span>{{ c.source }}</span>{% endif %}</span>{% endif %}{% endmacro %}
+
+{# The wishlist switch values a picker line answers: the keys of lists, and * (All lists) when all is true; hidden at first without it. #}
+{% macro shows(keys, all) %}{% set values = (['*'] if all else []) + keys %} data-wl="{{ values|join(' ') }}"{% if not all %} hidden{% endif %}{% endmacro %}
+
+{# A copy's entry in its card's picker: its icon with its gear tier and masterwork overlays; for each side its place on the card and its popularity score, in its heat (data-r holds both places, which report.js orders the entries by), its lock and DIM tag; its id on a line of its own; its version's name when it isn't the family's, and its element, rounds per minute, season and drop source when the card's copies differ in them; the lists with a roll it completes (No wishlist match, or Missing wishlist entries where the lists shown have no rolls for the weapon) and the lists that trash it, each line answering the wishlist switch; its kill count and DIM note. The corner button copies its id. #}
+{% macro pick(c) %}
+{% set covered = c.covered.split() %}
+{% set matched = c.matched.split() %}
+{% set trash = c.trash.split() %}
+{% set unmatched = covered|reject('in', matched)|list %}
+{% set missing = wishlists|map(attribute='key')|reject('in', covered)|list %}
+<div class="pr" data-k="{{ c.k }}" data-r="{{ c.pve_rank }} {{ c.pvp_rank }}">
+<button type="button" class="pr-select" role="radio" aria-checked="false">
+<span class="wicon" role="img" aria-label="{% if c.gear_tier %}Gear tier {{ c.gear_tier }}{% else %}No gear tier{% endif %}{% if c.is_masterworked %}, masterworked{% endif %}">{% for src in (c.icon, c.watermark, c.tier_overlay, c.masterwork_overlay) if src %}<img src="{{ src }}" alt="" loading="lazy">{% endfor %}</span>
+<span class="pr-text">
+<span class="pr-line">{% for side in ('pve', 'pvp') %}<span class="copy-n on-{{ side }}{% if c[side ~ '_rank'] == 1 %} keep{% endif %}">#{{ c[side ~ '_rank'] }}</span>{% if c[side ~ '_score'] is not none %}<span class="pr-pop on-{{ side }} c{{ c[side ~ '_heat'] }}">{{ (c[side ~ '_score'] * 100)|round|int }}%</span>{% endif %}{% endfor %}{% if c.is_locked %}{{ m.icon('locked', 'Locked') }}{% endif %}{% if c.tag %}{{ m.icon(c.tag, 'DIM tag: ' ~ c.tag) }}{% endif %}</span>
+<span class="pr-id">{{ c.instance_id }}</span>
+{% if c.name != c.family %}
+<span class="version">{{ c.name }}</span>
+{% endif %}
+{% if c.elements > 1 %}
+<span class="element">{% if c.element_icon %}<img src="{{ c.element_icon }}" alt="" loading="lazy">{% endif %}{{ c.element }}</span>
+{% endif %}
+{% if c.rpms > 1 and c.rpm %}
+<span class="rpm">RPM: {{ c.rpm }}</span>
+{% endif %}
+{% if c.origins > 1 %}
+{{ origin(c) }}
+{% endif %}
+<span class="pr-wish">{% for w in wishlists %}{% if w.key in matched %}<span{{ shows([w.key], true) }}><i class="wl-dot l{{ loop.index }}" aria-hidden="true"></i>{{ w.label }}</span>{% endif %}{% endfor %}{% if unmatched or (covered and not matched) %}<span class="none"{{ shows(unmatched, covered and not matched) }}>No wishlist match</span>{% endif %}{% if missing or not covered %}<span class="none"{{ shows(missing, not covered) }}>Missing wishlist entries</span>{% endif %}</span>
+{% if trash %}
+<span class="trash" data-wl="*">Trash in {% for w in wishlists if w.key in trash %}{{ w.label }}{% if not loop.last %}, {% endif %}{% endfor %}</span>
+{% if wishlists|length > 1 %}
+{% for w in wishlists if w.key in trash %}
+<span class="trash" data-wl="{{ w.key }}" hidden>Trash in {{ w.label }}</span>
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if c.kills is not none %}
+{{ kill_count(c) }}
+{% endif %}
+{% if c.notes %}
+<span class="notes">DIM Note: {{ c.notes }}</span>
+{% endif %}
+</span>
+</button>
+<button type="button" class="copy-btn" data-q="{{ c.instance_id }}" title="Copy id {{ c.instance_id }}" aria-label="Copy id {{ c.instance_id }}"></button>
+</div>
+{% endmacro %}
+<section class="page" id="page-weapons" hidden>
+<div class="intro">
+<h1>Weapons</h1>
+<p>{{ totals.weapons }} copies</p>
+</div>
+
+{% set duplicates = weapon_flags|selectattr('reason', 'equalto', 'exact_duplicate')|list %}
+{% set below = weapon_flags|selectattr('reason', 'equalto', 'below_legendary')|list %}
+<section class="block">
+<h2>True duplicates <span class="num">{{ duplicates|length }}</span></h2>
+<div class="card pad review">
+<div>
+{% if duplicates %}
+<p class="lead">{{ duplicates|length }} true duplicate{% if duplicates|length != 1 %}s{% endif %}</p>
+<p>Select them all in DIM with one search.</p>
+{{ m.purge_button(duplicates) }}
+{% else %}
+<p class="lead">No true duplicates</p>
+<p>No two copies of one weapon match in element, frame and every perk.</p>
+{% endif %}
+</div>
+</div>
+{% if duplicates %}
+<div class="tiles">
+{% for w in duplicates %}
+{{ flag_tile(w) }}
+{% endfor %}
+</div>
+{% endif %}
+{% if below %}
+<div class="block-head">
+<span><span class="num">{{ below|length }}</span> below Legendary (Common, Uncommon or Rare), not compared</span>
+{{ m.purge_button(below) }}
+</div>
+<div class="tiles">
+{% for w in below %}
+{{ flag_tile(w) }}
+{% endfor %}
+</div>
+{% endif %}
+</section>
+
+<section class="block">
+<h2>Roll Quality <span class="num"><span class="count">{{ roll_copies|map(attribute='card')|unique|list|length }}</span> weapons</span></h2>
+
+{% if roll_copies %}
+{{ m.legend(true) }}
+{# The Popularity switch sets every card's side; each card's own switch sets its own (report.js). #}
+<div class="switch-row">
+<span class="label">Popularity</span>
+<div class="switch side" role="group" aria-label="Popularity">
+<button type="button" class="side-pve" data-value="pve" aria-pressed="true">PvE</button>
+<button type="button" class="side-pvp" data-value="pvp" aria-pressed="false">PvP</button>
+</div>
+</div>
+{# The weapons switches: a card shows when its data-wpn names the pressed value of each; Has wishlist stands for the list the wishlist switch shows (listed-<key>, listed-* for All lists). #}
+<div class="switch-row">
+<span class="label">Weapons</span>
+<div class="switch" role="group" aria-label="Weapons" data-key="wpn">
+<button type="button" data-value="all" aria-pressed="true">All weapons</button>
+<button type="button" data-value="dupes" aria-pressed="false">Dupes</button>
+</div>
+<div class="switch" role="group" aria-label="Wishlist entries" data-key="wpn">
+<button type="button" data-value="all" aria-pressed="true">All</button>
+<button type="button" data-value="listed" aria-pressed="false">Has wishlist</button>
+</div>
+</div>
+{% if wishlists|length > 1 %}
+{# The wishlist switch: the list whose rings the grids show and whose rolls the pickers name (data-wl), every list's for All lists. #}
+<div class="switch-row">
+<span class="label">Wishlist</span>
+<div class="switch" role="group" aria-label="Wishlist" data-key="wl">
+<button type="button" data-value="*" aria-pressed="true">All lists</button>
+{% for w in wishlists %}
+<button type="button" data-value="{{ w.key }}" aria-pressed="false"><i class="wl-dot l{{ loop.index }}" aria-hidden="true"></i>{{ w.label }}</button>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+{% endif %}
+
+<div class="folds">
+{% for slot, slot_rows in roll_copies|group('slot') %}
+<details class="fold" open>
+<summary>{{ m.expand() }}{{ m.chevron() }}<h3>{{ slot|replace(' Weapons', '') }} {{ count(slot_rows) }}</h3></summary>
+{% for wtype, type_rows in slot_rows|group('wtype') %}
+<details class="fold" open>
+<summary>{{ m.expand() }}{{ m.chevron() }}<h4>{% if type_rows[0].wtype_icon %}<img class="type-icon" src="{{ type_rows[0].wtype_icon }}" alt="" loading="lazy">{% endif %}{{ wtype }} {{ count(type_rows) }}</h4></summary>
+<div class="fams">
+{% for card, copies in type_rows|group('card') %}
+{% set first = copies[0] %}
+{% set kind %}{{ first.wtype }}{% if first.archetypes == 1 %} · {{ first.archetype }}{% endif %}{% endset %}
+{% set covered = first.covered.split() %}
+<article class="card fam" data-side="pve" data-wpn="all{% if copies|length > 1 %} dupes{% endif %}{% if covered %} listed-*{% endif %}{% for key in covered %} listed-{{ key }}{% endfor %}">
+<header class="fam-head">
+<div class="fam-id">
+<h5><button type="button" class="toggle" aria-expanded="false" aria-controls="fam-{{ first.grid_id }}" aria-label="{{ card }}">{{ m.chevron() }}<span class="wicon" role="img" aria-label="{{ kind }}" title="{{ kind }}"><img src="{{ first.icon }}" alt="" loading="lazy">{% if first.watermark %}<img src="{{ first.watermark }}" alt="" loading="lazy">{% endif %}</span><span class="fam-name"><span class="fam-title">{{ first.family }}{% if first.ammo %}<img class="ammo" src="{{ first.ammo_icon }}" alt="{{ first.ammo|capitalize }} ammo" title="{{ first.ammo|capitalize }} ammo" loading="lazy">{% endif %}</span>{% if first.pool %}<span class="fam-pool">{{ first.pool }}</span>{% endif %}{% if first.origins == 1 %}{{ origin(first) }}{% endif %}</span></button></h5>
+{{ m.endgame_badges(first) }}
+</div>
+{% if first.elements == 1 or first.archetypes == 1 or (first.rpms == 1 and first.rpm) %}
+<span class="fam-stats">
+{% if first.elements == 1 %}
+<span class="element">{% if first.element_icon %}<img src="{{ first.element_icon }}" alt="" loading="lazy">{% endif %}{{ first.element }}</span>
+{% endif %}
+{% if first.archetypes == 1 %}
+<span class="frame">{% if first.archetype_icon %}<img src="{{ first.archetype_icon }}" alt="" loading="lazy">{% endif %}{{ first.archetype }}</span>
+{% endif %}
+{% if first.rpms == 1 and first.rpm %}
+<span class="rpm">RPM: {{ first.rpm }}</span>
+{% endif %}
+</span>
+{% endif %}
+<div class="switch mini side" role="group" aria-label="{{ card }}: popularity side">{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) %}<button type="button" class="side-{{ side }}" data-value="{{ side }}" aria-pressed="{{ (side == 'pve')|lower }}">{{ label }} <span class="num">{% if first[side ~ '_weapon_rank'] %}#{{ first[side ~ '_weapon_rank'] }}{% else %}—{% endif %}</span></button>{% endfor %}</div>
+<span class="copy-count">{{ copies|length }} cop{% if copies|length == 1 %}y{% else %}ies{% endif %}</span>
+<div class="fam-actions">
+{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) %}
+{% if first[side ~ '_confidence'] %}
+{{ m.confidence_chip(first[side ~ '_confidence'], side, first.grid_id, 'on-' ~ side) }}
+{% else %}
+<span class="pop-chip on-{{ side }}">No {{ label }} scores</span>
+{% endif %}
+{% endfor %}
+<div class="fam-links">
+<a class="lgg" href="https://www.light.gg/db/items/{{ first.item_hash }}/" target="_blank" rel="noopener">light.gg</a>
+{{ m.dim_button(copies, 'Copy IDs') }}
+</div>
+</div>
+</header>
+<div class="fam-body" id="fam-{{ first.grid_id }}" hidden>
+<div class="rp">
+<div class="picker" role="radiogroup" aria-label="{{ card }} copies">
+{% for c in copies %}
+{{ pick(c) }}
+{% endfor %}
+</div>
+<div class="rp-main" data-g="{{ first.grid_id }}"></div>
+</div>
+</div>
+</article>
+{% endfor %}
+</div>
+</details>
+{% endfor %}
+</details>
+{% endfor %}
+</div>
+</section>
+</section>

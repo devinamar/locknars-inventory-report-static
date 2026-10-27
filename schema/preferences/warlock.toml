@@ -1,0 +1,55 @@
+# Default armor preferences: Warlock exotic armor, one entry per exotic.
+# open_db adds each entry the armor_preference table lacks (names compared
+# ignoring case) and never changes a saved one.
+#   stats = up to three priority stats, best first: health, melee, grenade,
+#           super_stat, class_stat, weapons
+
+"Aeon Soul"                = { stats = ["health", "melee"] }
+"Astrocyte Verse"          = { stats = ["super_stat", "health", "weapons"] }
+"Ballidorse Wrathweavers"  = { stats = ["class_stat", "health", "weapons"] }
+"Boots of the Assembler"   = { stats = ["class_stat", "super_stat"] }
+"Briarbinds"               = { stats = ["class_stat"] }
+"Cenotaph Mask"            = { stats = ["weapons"] }
+"Chromatic Fire"           = { stats = ["weapons"] }
+"Contraverse Hold"         = { stats = ["grenade"] }
+"Crown of Tempests"        = { stats = ["grenade", "class_stat", "super_stat"] }
+"Dawn Chorus"              = { stats = ["super_stat", "grenade", "weapons"] }
+"Deimosuffusion"           = { stats = ["class_stat", "health", "grenade"] }
+"Eye of Another World"     = { stats = ["class_stat", "grenade", "melee"] }
+"Fallen Sunstar"           = { stats = ["grenade", "class_stat", "super_stat"] }
+"Felwinter's Helm"         = { stats = ["melee", "health", "weapons"] }
+"Geomag Stabilizers"       = { stats = ["super_stat", "weapons", "class_stat"] }
+"Getaway Artist"           = { stats = ["grenade", "class_stat", "weapons"] }
+"Karnstein Armlets"        = { stats = ["melee", "weapons", "health"] }
+"Mantle of Battle Harmony" = { stats = ["weapons", "super_stat", "class_stat"] }
+"Necrotic Grip"            = { stats = ["melee", "weapons", "class_stat"] }
+"Nezarec's Sin"            = { stats = ["weapons", "grenade", "melee"] }
+"Nothing Manacles"         = { stats = ["grenade", "health", "super_stat"] }
+"Ophidian Aspect"          = { stats = ["weapons"] }
+"Osmiomancy Gloves"        = { stats = ["grenade"] }
+"Promethium Spur"          = { stats = ["class_stat", "weapons"] }
+"Rain of Fire"             = { stats = ["weapons"] }
+"Rime-coat Raiment"        = { stats = ["class_stat", "grenade", "health"] }
+"Sanguine Alchemy"         = { stats = ["class_stat", "weapons", "super_stat"] }
+"Secant Filaments"         = { stats = ["class_stat", "weapons", "health"] }
+"Skull of Dire Ahamkara"   = { stats = ["super_stat", "health", "class_stat"] }
+"Solipsism"                = { stats = ["melee", "health"] }
+"Speaker's Sight"          = { stats = ["grenade", "weapons", "super_stat"] }
+"Starfire Protocol"        = { stats = ["grenade", "health", "class_stat"] }
+"Stormdancer's Brace"      = { stats = ["super_stat", "grenade", "weapons"] }
+"Sunbracers"               = { stats = ["grenade", "melee", "health"] }
+"Swarmers"                 = { stats = ["class_stat", "grenade", "weapons"] }
+"The Stag"                 = { stats = ["class_stat", "weapons", "super_stat"] }
+"Transversive Steps"       = { stats = ["health", "weapons", "class_stat"] }
+"Verity's Brow"            = { stats = ["grenade"] }
+"Vesper of Radius"         = { stats = ["class_stat", "health"] }
+"Wings of Sacred Dawn"     = { stats = ["weapons"] }
+"Winter's Guile"           = { stats = ["melee", "health"] }
+
+# Guessed from each exotic's perk description; review before relying on them.
+"Apotheosis Veil"   = { stats = ["super_stat", "grenade", "melee"] }
+"Claws of Ahamkara" = { stats = ["melee"] }
+"Eunoia"            = { stats = ["class_stat", "grenade"] }
+"Lunafaction Boots" = { stats = ["class_stat", "weapons"] }
+"Mataiodoxía"       = { stats = ["melee"] }
+"Phoenix Protocol"  = { stats = ["super_stat", "weapons"] }

@@ -1,0 +1,49 @@
+{# Exotics, by class: how many the player owns, and each exotic with copies to purge. #}
+{% import 'macros.html.j2' as m with context %}
+{% import 'text.j2' as t with context %}
+<section class="page" id="page-exotics" hidden>
+<div class="intro">
+<h1>Exotics</h1>
+<p>One copy of each exotic stays: the best on its stat picks. Exotic class item keeps one copy per perk pair.</p>
+</div>
+
+{% call(k) m.class_switch(classes) %}{{ k.exotic }}{% endcall %}
+
+{% set dupes_by_class = dict(exotic_dupes|group('armor_class')) %}
+{% for k in classes %}
+{% set dupes = dupes_by_class.get(k.armor_class, []) %}
+<div class="cls" data-cls="{{ k.armor_class }}"{% if not loop.first %} hidden{% endif %}>
+<p class="sub">You own <span class="num keep">{{ k.exotics_owned }}</span> of the {{ k.exotics_total }} {{ k.armor_class }} exotics.</p>
+<section class="block">
+<div class="block-head">
+<h2>To purge <span class="num purge">{{ dupes|selectattr('reason')|list|length }}</span></h2>
+{% if dupes %}
+{{ m.purge_button(dupes|selectattr('reason')) }}
+{% endif %}
+</div>
+{% if dupes %}
+<div class="exotics">
+{% for keeper, copies in dupes|group('keeper_id') %}
+{% set x = copies[0] %}
+<article class="card">
+<div class="exo-head">
+<span class="wicon" aria-hidden="true"><img src="{{ x.icon }}" alt="" loading="lazy">{% if x.watermark %}<img src="{{ x.watermark }}" alt="" loading="lazy">{% endif %}</span>
+<div><h3>{{ x.name }}</h3><span>{{ x.slot }} · {{ t.picks(x) }}{% if x.perks %} · {{ x.perks }}{% endif %}</span></div>
+</div>
+{% for c in copies %}
+{% if c.tie %}
+{{ m.tile(c, 'same score: the older copy stays') }}
+{% else %}
+{{ m.tile(c) }}
+{% endif %}
+{% endfor %}
+</article>
+{% endfor %}
+</div>
+{% else %}
+<p class="callout">No duplicates: you have one copy of each exotic.</p>
+{% endif %}
+</section>
+</div>
+{% endfor %}
+</section>

@@ -1,0 +1,119 @@
+{# Armor sets, by class: each set with a piece to purge or kept for a build, with its preferred stats, its purge query and bonuses, all its pieces per slot in score order; then the legacy pieces, from before Armor 3.0. The double chevron leading the class's head rolls all its sets up or down. #}
+{% import 'macros.html.j2' as m with context %}
+<section class="page" id="page-armor" hidden>
+<div class="intro">
+<h1>Armor sets</h1>
+</div>
+
+{% call(k) m.class_switch(classes) %}{{ k.legendary }}{% endcall %}
+
+<ul class="legend" aria-label="Legend">
+<li><i aria-hidden="true"></i>Kept</li>
+<li><span class="chip">Purge</span>Low score</li>
+<li><span class="chip">Dupe</span>Duplicate stats and Tuning</li>
+<li><span class="keeps"><span class="chip keep">Keep: …</span></span>Rescue for triple 100 stat spread</li>
+<li><i class="box" aria-hidden="true"></i>Tuning Stat</li>
+</ul>
+
+{% set sets_by_class = dict(set_pieces|group('armor_class')) %}
+{% set legacy_by_class = dict(legacy|group('armor_class')) %}
+{% for k in classes %}
+<div class="cls" data-cls="{{ k.armor_class }}"{% if not loop.first %} hidden{% endif %}>
+{% set pieces_k = sets_by_class.get(k.armor_class, []) %}
+{% set purged = pieces_k|selectattr('reason')|rejectattr('rescued')|list %}
+{% if pieces_k|selectattr('flagged')|first %}
+<div class="block-head cls-head">
+<span>{{ m.expand(true) }}<span><span class="num purge">{{ purged|length }}</span> to purge</span></span>
+{% if purged %}
+{{ m.purge_button(purged) }}
+{% endif %}
+</div>
+{% endif %}
+{% for set_name, pieces in pieces_k|selectattr('flagged')|group('set_name') %}
+{% set s = pieces[0] %}
+{% set set_purged = pieces|selectattr('reason')|rejectattr('rescued')|list %}
+<article class="card set">
+<header>
+<span class="grade{% if s.grade == 'S' %} top{% endif %}" aria-label="Grade {{ s.grade_label }}">{{ s.grade or '–' }}</span>
+<div class="set-name">
+<h3><button type="button" class="toggle" aria-expanded="true" aria-controls="set-{{ s.instance_id }}">{{ m.chevron() }}{{ set_name or 'No set' }}</button></h3>
+</div>
+<div class="kv"><span class="label">Preferred Stats</span>
+<ol class="picks">
+{% for key in [s.stat_1, s.stat_2, s.stat_3] if key %}
+<li><span class="num">{{ loop.index }}.</span><img src="{{ stat_icons[key] }}" alt="" width="16" height="16">{{ stat_names[key] }}</li>
+{% else %}
+<li>None: scored on the stat total</li>
+{% endfor %}
+</ol>
+</div>
+{% if set_purged %}
+{{ m.purge_button(set_purged) }}
+{% endif %}
+</header>
+<div class="set-body" id="set-{{ s.instance_id }}">
+{% set bonuses = set_bonuses.get(set_name, []) %}
+{% if bonuses %}
+<div class="bonuses">
+{% for b in bonuses %}
+<div class="bonus">
+<div class="bonus-head">
+{% if b.icon %}
+<img src="{{ b.icon }}" alt="" loading="lazy">
+{% endif %}
+<span class="label">{{ b.pieces }}-piece</span>
+<b>{{ b.name }}</b>
+{% if b.aegis %}
+<span class="aegis" title="This bonus's grade and rank on The Aegis's sheet">Aegis {{ b.aegis.grade }} · #{{ b.aegis.rank }}</span>
+{% endif %}
+</div>
+<p>{{ b.description|icons(text_icons) }}</p>
+{% if b.aegis %}
+<p class="small">{{ b.aegis.trigger }} → {{ b.aegis.effect }}</p>
+<p class="small aegis-note">Aegis Note: {{ b.aegis.analysis }}</p>
+{% else %}
+<p class="small muted">Not on The Aegis's sheet.</p>
+{% endif %}
+</div>
+{% endfor %}
+</div>
+{% endif %}
+<div class="slots">
+{% for slot, copies in pieces|group('slot') %}
+<section>
+{% set piece = copies[0] %}
+<h4><span class="wicon" role="img" aria-label="{{ piece.name }}" title="{{ piece.name }}"><img src="{{ piece.icon }}" alt="" loading="lazy">{% if piece.watermark %}<img src="{{ piece.watermark }}" alt="" loading="lazy">{% endif %}</span>{{ slot }}</h4>
+{% for p in copies %}
+{{ m.tile(p) }}
+{% endfor %}
+</section>
+{% endfor %}
+</div>
+</div>
+</article>
+{% else %}
+<p class="callout">Nothing to purge in the {{ k.armor_class }}'s sets.</p>
+{% endfor %}
+
+{% set legacy_pieces = legacy_by_class.get(k.armor_class, []) %}
+{% if legacy_pieces %}
+<section class="block">
+<div class="block-head">
+<h2>Legacy <span class="num purge">{{ legacy_pieces|length }}</span></h2>
+{{ m.purge_button(legacy_pieces) }}
+</div>
+<p>Legendary pieces from before Armor 3.0: no gear tier, set bonus or tuning socket, so they are always purged.</p>
+<div class="tiles">
+{% for p in legacy_pieces %}
+<div class="tile purge">
+<div class="tile-top"><span class="name">{{ p.name }}</span><span class="chip">Purge</span></div>
+<span class="tuning">{{ p.slot }}{% if p.set_name %} · {{ p.set_name }}{% endif %}</span>
+{{ m.stats(p) }}
+</div>
+{% endfor %}
+</div>
+</section>
+{% endif %}
+</div>
+{% endfor %}
+</section>

@@ -1,0 +1,45 @@
+{# The perk grids the weapons page and Popular open: one template per grid, which report.js clones into a Popular row or a weapons card the first time it opens. A grid holds its columns in socket order, each column's rows (m.grid_row) in PvE order, its trait pairs' lines (m.pair_path) and each side's details line; the list or card it opens in says which side shows (data-side). Then the hidden tooltip blocks (each perk's, and each scored weapon's confidence and Endgame badge per side), the wishlists' names for the tooltips, the heat gradient the legends' pair lines use, and the perk icons, the badge icons and every list mix's ring colours. #}
+{% import 'macros.html.j2' as m with context %}
+{% set weapons = dict(popularity|group('grid_id', 'side')) %}
+{% set pairs = dict(grid_pairs|group('grid_id')) %}
+{% set sides = dict(popularity_sides|group('side')) %}
+{% set used = grid|map(attribute='plug_hash')|unique|list %}
+{% for grid_id, rows in grid|group('grid_id') %}
+<template id="g{{ grid_id }}"><div class="pg-wrap"><div class="pg">
+{% for col, cells in rows|group('col') %}
+<div class="pc" data-col="{{ col }}"><div class="pc-head"><span class="pc-label">{{ cells[0].label }}</span>{% if cells[0].pve_rel is none %}<span class="conf on-pve">no scores</span>{% endif %}{% if cells[0].pvp_rel is none %}<span class="conf on-pvp">no scores</span>{% endif %}</div><ul class="pl">{% for p in cells %}{{ m.grid_row(p) }}{% endfor %}</ul></div>
+{% endfor %}
+<svg class="links" aria-hidden="true">{% for p in pairs.get(grid_id, []) %}{{ m.pair_path(p) }}{% endfor %}</svg>
+</div></div>
+{% for side in ('pve', 'pvp') if (grid_id, side) in weapons %}
+{{ m.meta_line(weapons[(grid_id, side)][0]) }}
+{% endfor %}
+</template>
+{% endfor %}
+<div hidden>
+{% for p in perks if p.plug_hash in used %}
+<div id="tip-p{{ p.plug_hash }}"><b>{{ p.perk }}</b>{% if p.text %}<p>{{ p.text|icons(text_icons) }}</p>{% endif %}</div>
+{% endfor %}
+{% for w in popularity %}
+{% set side = sides[w.side][0] %}
+{% if w.confidence %}
+<div id="tip-c-{{ w.side }}-{{ w.grid_id }}"><b>{{ side.label }} #{{ w.rank }} · {{ w.confidence|capitalize }} confidence</b><p class="tip-stat">{{ '{:,}'.format(w.weakest_votes) }} effective votes {% if w.same %}in every column{% else %}in {{ w.weakest }}, its weakest column{% endif %}</p><p>{{ '{:,}'.format(w.players) }} copies voted; weighted by the activities they were used in, they count as {{ '{:,}'.format(w.weakest_votes) }} equal votes.</p><p class="tip-range">Low from 10 votes, medium from 30, high from 100.</p>{% if w.top %}<p>So {{ w.top }}'s {{ w.top_share|pct }} is likely {{ w.top_low|pct }} to {{ w.top_high|pct }}, about ±{{ ((w.top_high - w.top_low) * 50)|round|int }} points.</p>{% endif %}</div>
+{% endif %}
+{% if w.endgame %}
+<div id="tip-e-{{ w.side }}-{{ w.grid_id }}"><b>{{ side.label }} Endgame</b><p>{{ w.hard_share|pct }} of its {{ side.label }} copies ({{ '{:,}'.format(w.hard_copies) }} of {{ '{:,}'.format(w.players) }}) were used in hard content: {{ side.hard }}.</p><p class="tip-range">Shown from {{ (popularity_rule.endgame_share * 100)|round|int }}% and {{ popularity_rule.endgame_copies }} copies.</p></div>
+{% endif %}
+{% endfor %}
+<div id="wishlists">{% for w in wishlists %}<span class="wl-name l{{ loop.index }}">{{ w.label }}</span>{% endfor %}</div>
+</div>
+<svg class="defs" width="0" height="0" aria-hidden="true"><defs><linearGradient id="heat-line"><stop offset="0" style="stop-color:var(--heat-lo)"></stop><stop offset="0.5" style="stop-color:var(--heat-mid)"></stop><stop offset="1" style="stop-color:var(--heat-hi)"></stop></linearGradient></defs></svg>
+<style>
+{% for p in perks if p.plug_hash in used %}
+[data-tip="p{{ p.plug_hash }}"] { --i: url("{{ p.icon }}"); }
+{% endfor %}
+{% for s in popularity_sides %}
+.cert.{{ s.side }} { --icon: url("{{ s.icon }}"); }
+{% endfor %}
+{% for rings in ring_sets(wishlists|length) %}
+{{ rings|ring_rule }}
+{% endfor %}
+</style>

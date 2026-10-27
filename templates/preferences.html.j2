@@ -1,0 +1,82 @@
+{# Preferences: everything the app stores from the player, in sections that open and close: each armor set's preferred stats and grade, in rank order within the grade; each exotic's preferred stats, by class; and the wishlists weapon rolls are scored against. A set's or exotic's badge shows its bonuses or its perk when pointed at. #}
+{% import 'macros.html.j2' as m with context %}
+<section class="page" id="page-preferences" hidden>
+<div class="intro">
+<h1>Preferences</h1>
+</div>
+
+{# A preference's preferred stats, one cell each. #}
+{% macro picks(p) %}
+{% if p.stat_1 %}
+{% for key in [p.stat_1, p.stat_2, p.stat_3] %}
+<td>{% if key %}<span class="stat-pick"><img src="{{ stat_icons[key] }}" alt="" width="16" height="16">{{ stat_names[key] }}</span>{% endif %}</td>
+{% endfor %}
+{% else %}
+<td colspan="3" class="muted">None: scored on the stat total</td>
+{% endif %}
+{% endmacro %}
+
+{# An armor set's or exotic's badge: a piece's icon and watermark, whose tooltip is the tip-<tip> block. A set has one per class. #}
+{% macro badge(p, tip) %}
+{% if p.icon %}<span class="wicon" data-tip="{{ tip }}"><img src="{{ p.icon }}" alt="" loading="lazy">{% if p.watermark %}<img src="{{ p.watermark }}" alt="" loading="lazy">{% endif %}</span>{% endif %}
+{% endmacro %}
+
+{% set badges_by_set = dict(set_badges|group('set_hash')) %}
+<div class="folds">
+<details class="fold">
+<summary>{{ m.chevron() }}<h2>Armor stat preferences <span class="num">{{ set_preferences|length }}</span></h2></summary>
+<div class="scroll">
+<table class="prefs">
+<thead><tr><th scope="col">Grade</th><th scope="col">Set</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
+<tbody>
+{% for p in set_preferences %}
+<tr><td title="{{ p.grade_label }}"><b>{{ p.grade or '–' }}</b></td><th scope="row"><span class="pref-name"><span class="badges">{% for b in badges_by_set.get(p.set_hash, []) %}{{ badge(b, 'set-%s' % p.set_hash) }}{% endfor %}</span>{{ p.name }}</span></th>{{ picks(p) }}</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+
+<details class="fold">
+<summary>{{ m.chevron() }}<h2>Exotics stat preferences <span class="num">{{ exotic_preferences|length }}</span></h2></summary>
+{% for armor_class, exotics in exotic_preferences|group('armor_class') %}
+<details class="fold">
+<summary>{{ m.chevron() }}<h3>{{ armor_class or 'Not in the manifest' }} <span class="num">{{ exotics|length }}</span></h3></summary>
+<div class="scroll">
+<table class="prefs">
+<thead><tr><th scope="col">Exotic</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
+<tbody>
+{% for p in exotics %}
+<tr><th scope="row"><span class="pref-name">{{ badge(p, 'exo-%s' % p.item_hash) }}{{ p.name }}</span></th>{{ picks(p) }}</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+{% endfor %}
+</details>
+
+<details class="fold">
+<summary>{{ m.chevron() }}<h2>Wishlists <span class="num">{{ wishlists|length }}</span></h2></summary>
+<div class="scroll">
+<table class="prefs">
+<thead><tr><th scope="col">Wishlist</th><th scope="col">Key</th><th scope="col">File</th></tr></thead>
+<tbody>
+{% for w in wishlists %}
+<tr><th scope="row">{{ w.label }}</th><td class="num">{{ w.key }}</td><td><a href="{{ w.url }}" title="{{ w.url }}">{{ w.url.rsplit('/', 1)[-1] or w.url }}</a></td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+</div>
+
+<div hidden>
+{% for p in set_preferences if p.set_hash %}
+<div id="tip-set-{{ p.set_hash }}">{% for b in set_bonuses.get(p.set_name, []) %}<b>{{ b.pieces }}-piece: {{ b.name }}{% if b.aegis %} · Aegis {{ b.aegis.grade }} #{{ b.aegis.rank }}{% endif %}</b><p>{{ b.description|icons(text_icons) }}</p>{% endfor %}</div>
+{% endfor %}
+{% for p in exotic_preferences if p.perk %}
+<div id="tip-exo-{{ p.item_hash }}"><b>{{ p.perk }}</b><p>{{ p.perk_text|icons(text_icons) }}</p></div>
+{% endfor %}
+</div>
+</section>

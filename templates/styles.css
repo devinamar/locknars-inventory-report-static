@@ -1,0 +1,544 @@
+/* The report's styles. Colours follow the Base16 Runner Shell palette;
+   element colours are game-accurate and not themed. */
+:root {
+    --bg: #0c0c08;
+    --card: #14140e;
+    --tile: #191911;
+    --line: #2a2a1e;
+    --line-hi: #4e4e3a;
+    --ink: #e6eba8;
+    --ink-hi: #f4f8d8;
+    --ink-mid: #c9cf98;
+    --muted: #9a9a78;
+    --faint: #8a8a6a;
+    --keep: #00ffee;
+    --keep-fill: #0f2e2b;
+    --keep-line: #1f5c58;
+    --keep-bar: #00b8ac;
+    --purge: #ffb800;
+    --purge-line: #5c4a12;
+    --purge-note: #ffc940;
+    --ok: #c0f030;
+    --bad: #ff1a1a;
+    --bad-ink: #ff8a80;
+    --info: #4499ff;
+    --dim-note: #ff6eb4;
+    /* The wishlists' colours, by the list's place (the fifth comes round to
+       the first), clear of the heat scale's red, yellow and green: Neon
+       Cyan, Hot Magenta, Cobalt and a violet. */
+    --magenta: #e040c0;
+    --violet: #a070ff;
+    --wl1: var(--keep);
+    --wl2: var(--magenta);
+    --wl3: var(--info);
+    --wl4: var(--violet);
+    /* Perk heat: red for a perk players rarely pick, yellow, green for their
+       favourite in the column, in tenths (--h0 to --h10); dark red, below
+       red, for a very low confidence. */
+    --heat-lo: var(--bad);
+    --heat-mid: var(--purge);
+    --heat-hi: var(--ok);
+    --heat-vlo: color-mix(in oklab, var(--heat-lo) 55%, #000);
+    --h0: var(--heat-lo);
+    --h1: color-mix(in oklab, var(--heat-lo) 80%, var(--heat-mid));
+    --h2: color-mix(in oklab, var(--heat-lo) 60%, var(--heat-mid));
+    --h3: color-mix(in oklab, var(--heat-lo) 40%, var(--heat-mid));
+    --h4: color-mix(in oklab, var(--heat-lo) 20%, var(--heat-mid));
+    --h5: var(--heat-mid);
+    --h6: color-mix(in oklab, var(--heat-mid) 80%, var(--heat-hi));
+    --h7: color-mix(in oklab, var(--heat-mid) 60%, var(--heat-hi));
+    --h8: color-mix(in oklab, var(--heat-mid) 40%, var(--heat-hi));
+    --h9: color-mix(in oklab, var(--heat-mid) 20%, var(--heat-hi));
+    --h10: var(--heat-hi);
+    /* The keyboard focus ring on a perk: white, apart from every list's
+       colour. */
+    --focus: var(--ink-hi);
+    /* A copy icon, for the buttons that copy a weapon copy's id. */
+    --copy-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='12' height='12' rx='2'/%3E%3Cpath d='M5 15V5a2 2 0 0 1 2-2h10'/%3E%3C/svg%3E");
+    --head: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+    --body: 'Barlow', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--body); }
+a { color: var(--keep); }
+a:hover { color: #9ffff8; }
+button { font: inherit; color: inherit; }
+.num { font-family: var(--mono); font-weight: 500; }
+.keep { color: var(--keep); }
+.purge { color: var(--purge); }
+.foot { margin: 0; font-size: 14px; color: var(--muted); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 72px; }
+
+/* Shell: brand, page nav, pages */
+/* The header stays at the top of the window as the page scrolls. */
+.top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 32px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; padding: 10px 0; }
+.brand b { font: 700 22px var(--head); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-hi); }
+.brand span { font: 13px var(--mono); color: var(--muted); }
+nav { display: flex; flex-wrap: wrap; gap: 0 28px; font: 600 17px var(--head); letter-spacing: 0.06em; text-transform: uppercase; }
+nav a { color: var(--muted); text-decoration: none; padding: 10px 0 8px; border-bottom: 3px solid transparent; }
+nav a:hover { color: var(--ink-hi); }
+nav a[aria-current] { color: var(--ink-hi); border-bottom-color: var(--keep); }
+.page { display: flex; flex-direction: column; gap: 36px; padding-top: 36px; }
+.page[hidden], [hidden] { display: none !important; }
+.intro { display: flex; flex-direction: column; gap: 10px; max-width: 900px; }
+.intro p { margin: 0; font-size: 18px; color: var(--ink-mid); }
+h1 { margin: 0; font: 700 clamp(40px, 6vw, 60px)/1.02 var(--head); color: var(--ink-hi); }
+h2 { margin: 0; font: 700 26px/1.2 var(--head); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-hi); }
+h2 .num { font-weight: 400; font-size: 18px; letter-spacing: 0; color: var(--muted); }
+h2 .num.purge { color: var(--purge); }
+h3 { margin: 0; font: 700 22px/1.15 var(--head); color: var(--ink-hi); }
+.block { display: flex; flex-direction: column; gap: 16px; }
+.block > p { margin: 0; max-width: 900px; color: var(--ink-mid); }
+.block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+.block-head > span { color: var(--ink-mid); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.pad { padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.callout { margin: 0; padding: 12px 16px; border: 1px solid var(--keep-line); border-radius: 10px; color: var(--ink-mid); }
+.label { font: 600 13px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+/* Buttons: switches, DIM copy */
+.switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.switch button { font-weight: 600; font-size: 15px; min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid var(--line-hi); background: transparent; color: var(--ink-mid); cursor: pointer; }
+.switch button .num { font-weight: 400; color: var(--muted); }
+.switch button[aria-pressed="true"] { border-color: var(--keep); background: var(--keep-fill); color: var(--ink-hi); }
+.dim, .lgg, .goto { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--keep-line); background: transparent; color: var(--keep); font-size: 14px; font-weight: 600; cursor: pointer; }
+.dim:hover, .lgg:hover, .goto:hover { background: var(--keep-fill); }
+/* A flagged copy's My Copies, under its tile's text. */
+.tile .goto { align-self: flex-start; margin-top: 6px; }
+/* A purge query's button, in the Purge badge's yellow. */
+.dim.purge { border-color: var(--purge-line); color: var(--purge); }
+.dim.purge:hover { background: color-mix(in srgb, var(--purge) 14%, var(--card)); }
+.lgg { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* Summary */
+.player span { font-weight: 600; color: var(--muted); }
+.summary h1 { font-size: clamp(48px, 7vw, 76px); line-height: 1; }
+.kicker { font: 600 26px var(--head) !important; letter-spacing: 0.06em; text-transform: uppercase; }
+.totals { display: flex; flex-wrap: wrap; gap: 4px 28px; font-size: 20px !important; margin-top: 6px !important; }
+.totals b { color: var(--ink-hi); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 20px; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card-head a { font-weight: 600; text-decoration: none; padding: 10px 0; }
+.big { margin: 0; display: flex; align-items: baseline; gap: 12px; font-size: 18px; color: var(--ink-mid); }
+.big .num { font-size: 56px; line-height: 1; color: var(--ink-hi); }
+.big .num.purge { color: var(--purge); }
+.big .dim { margin-left: auto; }
+.sub { margin: 0; color: var(--ink-mid); }
+.facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: baseline; }
+.facts dt { font-size: 18px; text-align: right; }
+.facts dd { margin: 0; }
+.share { display: flex; height: 12px; border-radius: 6px; overflow: hidden; gap: 2px; }
+.share i { display: block; height: 12px; }
+.reasons { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 20px; }
+.reasons li { display: flex; align-items: center; gap: 10px; }
+.reasons .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.reasons .num { color: var(--ink-hi); min-width: 2ch; text-align: right; }
+.r1 { background: #ffb800; } .r2 { background: #d08f00; } .r3 { background: #9c6c00; } .r4 { background: #7a6a30; } .r5 { background: #5a5a42; }
+.reach { display: grid; grid-template-columns: 90px 1fr 6em; align-items: center; gap: 14px; }
+.reach b { color: var(--ink-hi); }
+.meter { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.meter i { display: block; height: 8px; background: var(--keep); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 0; text-align: left; }
+thead th { padding: 6px 0; font-size: 14px; font-weight: 500; color: var(--muted); }
+tbody tr { border-top: 1px solid var(--line); }
+tbody th { font-weight: 600; color: var(--ink-hi); }
+.right { text-align: right; }
+/* Collapsible sections: a card whose summary line, led by a chevron, opens it;
+   one inside another drops its card and indents. */
+.fold { border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
+.fold summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 20px; min-height: 44px; cursor: pointer; list-style: none; }
+.fold summary::-webkit-details-marker { display: none; }
+.fold summary h2 { font-size: 22px; }
+.fold summary h3 { font-size: 19px; }
+.fold .chev { flex: none; transition: transform 0.15s; }
+.fold[open] > summary .chev { transform: rotate(90deg); }
+.fold .scroll { overflow-x: auto; border-top: 1px solid var(--line); }
+.fold .fold { border: 0; border-top: 1px solid var(--line); border-radius: 0; background: transparent; }
+.fold .fold summary { padding-left: 40px; }
+.fold summary h4 { margin: 0; display: inline-flex; align-items: center; gap: 10px; font: 700 19px/1.2 var(--head); color: var(--ink-hi); }
+/* Expand all: the double chevron leading a group (before a weapon section's
+   own chevron, or a class's armor set count), turned down while it is rolled
+   down. */
+.expand { display: inline-flex; padding: 4px; margin: -4px; border: 0; border-radius: 4px; background: none; cursor: pointer; }
+.expand:hover { background: var(--keep-fill); }
+.expand svg { transition: transform 0.15s; }
+.expand[aria-expanded="true"] svg { transform: rotate(90deg); }
+.type-icon { width: 32px; height: 32px; flex: none; border-radius: 3px; }
+/* Disclosure buttons: a weapon card's or armor set's name, which shows or
+   hides the rest of its card. */
+.toggle { display: inline-flex; align-items: center; gap: 12px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.toggle .chev { flex: none; transition: transform 0.15s; }
+.toggle[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.sources .state { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-mid); }
+.sources table { min-width: 560px; }
+.sources th, .sources td { padding: 12px 16px; }
+.sources thead th { padding: 10px 16px; }
+.sources td:nth-child(2) { color: var(--ink-mid); }
+.sources td:last-child { font: 14px var(--mono); color: var(--muted); }
+.status { display: inline-flex; align-items: center; gap: 8px; }
+.status::before { content: ""; width: 10px; height: 10px; border-radius: 5px; flex: none; background: var(--ok); }
+.status.bad { color: var(--bad-ink); }
+.status.bad::before { background: var(--bad); }
+
+/* Weapons: true duplicates, then Roll Quality: a card per weapon, its copies beside its perk grid */
+.review { flex-direction: row; flex-wrap: wrap; gap: 20px 40px; align-items: center; }
+.review > div { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; flex: 1 1 320px; }
+.lead { margin: 0; font: 700 28px var(--head); color: var(--ink-hi); }
+.review p { margin: 0; color: var(--ink-mid); }
+.wicon { position: relative; width: 48px; height: 48px; flex: none; border-radius: 4px; overflow: hidden; background: var(--line); }
+.wicon img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.switch-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.switch + .switch { padding-left: 14px; border-left: 1px solid var(--line); }
+/* A card scrolls in below the sticky header; one My Copies lands on is
+   outlined in cyan for a moment. */
+.fam { overflow: visible; scroll-margin-top: 80px; }
+.fam.flash { animation: flash 1.6s ease-out; }
+@keyframes flash { from { box-shadow: 0 0 0 2px var(--keep); } to { box-shadow: 0 0 0 2px transparent; } }
+.fams { display: flex; flex-direction: column; gap: 12px; padding: 4px 20px 20px; }
+.fam-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 14px 20px; }
+.fam-head h5 { margin: 0; font: 700 26px/1.15 var(--head); color: var(--ink-hi); }
+/* A card's confidence chip at the top right, light.gg and Copy IDs under it,
+   so they take one narrow column of the header's row. */
+.fam-actions { margin-left: auto; align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.fam-links { display: flex; gap: 12px; }
+/* A closed card shows its copy count; an open one shows the copies. */
+.fam-head .copy-count { font: 14px var(--mono); color: var(--muted); }
+.fam-head:has(.toggle[aria-expanded="true"]) .copy-count { display: none; }
+/* A card's name: its family's with the ammo badge, then its pool, season and
+   drop source under it, the source wrapping within 200px so a long one
+   doesn't push the header's buttons and chip onto a second row; then its
+   element, frame and rounds per minute, stacked. */
+.fam-name { display: flex; flex-direction: column; gap: 4px; }
+.fam-name .origin { max-width: 200px; font: 400 13px/1.4 var(--body); }
+.fam-title { display: inline-flex; align-items: center; gap: 10px; }
+.ammo { width: auto; height: 18px; flex: none; }
+.fam-stats { display: flex; flex-direction: column; gap: 4px; }
+.element, .frame { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-mid); }
+.element img, .frame img { width: 20px; height: 20px; }
+.fam-body { padding: 4px 20px 16px; border-top: 1px solid var(--line); }
+.rpm { margin-top: -2px; font: 11px var(--mono); color: var(--muted); }
+.kill { display: inline-flex; align-items: center; gap: 6px; font: 13px var(--mono); color: var(--ink-mid); }
+.kill img { width: 16px; height: 16px; flex: none; opacity: 0.85; }
+.origin { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+/* A legend's perk ring: filled for a perk a wishlist roll names (or in a roll
+   the copy completes), dashed for one a roll only names. A list's colours
+   come from the generated l<places> rules: --ring, its border colours, and
+   --tint for the fill and its wishlist dot. */
+.perk { display: inline-flex; flex: none; border-radius: 50%; border: 2px solid; border-color: var(--ring, var(--line)); }
+.perk.pick, .perk.hit { background: color-mix(in srgb, var(--tint) 14%, var(--card)); }
+.perk.named { border-style: dashed; }
+.wl-dot { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--tint); }
+
+/* A weapon card's name block: its toggle, then the Endgame badges under the
+   season and source, in line with the name (chevron 16 + gap 12 + icon 48 +
+   gap 12). Its own PvE/PvP switch is the report's switch, smaller, each
+   side's rank on its button. */
+.fam-id { display: flex; flex-direction: column; gap: 6px; }
+.fam-id .endgame { margin-left: 88px; }
+.switch.mini { gap: 4px; }
+.switch.mini button { min-height: 30px; padding: 0 12px; font-size: 13px; }
+.switch.mini button .num { font-size: 12px; }
+/* A card's body: the picker on the left, narrow enough that a five-column
+   perk grid fits beside it without scrolling, the perk grid on the right. */
+.rp { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 20px; padding-top: 16px; }
+@media (max-width: 900px) { .rp { grid-template-columns: minmax(0, 1fr); } }
+.rp-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* The picker: an entry per copy, best by popularity first, the copy shown
+   checked; each gives its place (#1 cyan) and its score in its heat. */
+.picker { display: flex; flex-direction: column; gap: 8px; }
+.pr { position: relative; }
+.pr-select { width: 100%; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--tile); text-align: left; cursor: pointer; }
+.pr-select:hover { border-color: var(--line-hi); }
+.pr-select[aria-checked="true"] { border-color: var(--keep); background: var(--keep-fill); }
+.pr-select:focus-visible, .copy-btn:focus-visible { outline: 2px solid var(--keep); outline-offset: 2px; }
+.pr .wicon { width: 40px; height: 40px; }
+.pr-text { display: flex; flex-direction: column; gap: 5px; min-width: 0; font-size: 13px; color: var(--ink-mid); }
+.pr-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding-right: 26px; }
+.copy-n { font: 500 13px var(--mono); color: var(--muted); }
+.copy-n.keep { color: var(--keep); }
+.pr-pop { font: 12px var(--mono); }
+.pr-pop.c0 { color: var(--h0); } .pr-pop.c1 { color: var(--h1); } .pr-pop.c2 { color: var(--h2); } .pr-pop.c3 { color: var(--h3); }
+.pr-pop.c4 { color: var(--h4); } .pr-pop.c5 { color: var(--h5); } .pr-pop.c6 { color: var(--h6); } .pr-pop.c7 { color: var(--h7); }
+.pr-pop.c8 { color: var(--h8); } .pr-pop.c9 { color: var(--h9); } .pr-pop.c10 { color: var(--h10); }
+.pr-id { font: 10px var(--mono); color: var(--info); overflow-wrap: anywhere; }
+.version { font-size: 12px; color: var(--muted); }
+.pr-wish { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.pr-wish span { display: inline-flex; align-items: center; }
+.pr-wish .wl-dot { margin-right: 6px; }
+.pr-wish .none { color: var(--muted); }
+.pr .trash { color: var(--bad-ink); }
+.pr .notes { color: var(--dim-note); overflow-wrap: anywhere; }
+/* A copy's id button at its entry's corner, a copy icon drawn as a mask; it
+   turns green once copied. */
+.copy-btn { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--muted); cursor: copy; }
+.copy-btn::before { content: ''; position: absolute; inset: 4px; background: currentColor; -webkit-mask: var(--copy-icon) center / contain no-repeat; mask: var(--copy-icon) center / contain no-repeat; }
+.copy-btn:hover { color: var(--keep); background: var(--keep-fill); }
+.copy-btn.copied, .dim.copied { color: var(--ok); }
+
+/* Armor tiles: set cards, exotics, pieces without a tuning socket */
+.legend { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: 15px; color: var(--ink-mid); }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line-hi); background: var(--card); }
+.legend i.purge { border: 0; background: var(--purge); }
+.legend i.keep { border: 0; background: var(--keep); }
+.cls { display: flex; flex-direction: column; gap: 24px; }
+/* A class's armor head: the count and its purge query side by side. */
+.cls-head { justify-content: flex-start; align-items: center; gap: 8px 16px; }
+.cls-head > span { display: inline-flex; align-items: center; gap: 14px; }
+.set > header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 18px 20px; }
+.set > header .dim { margin-left: auto; }
+.set-body { border-top: 1px solid var(--line); }
+.set-body .bonuses { padding: 18px 20px 0; }
+.grade { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; flex: none; border-radius: 8px; border: 2px solid var(--line-hi); font: 700 30px var(--head); color: var(--ink-hi); }
+.grade.top { border-color: var(--keep); }
+.set-name { display: flex; flex-direction: column; gap: 2px; flex: 1 1 260px; }
+.set-name h3 { font-size: 28px; line-height: 1.1; }
+.set-name span { color: var(--ink-mid); }
+.kv { display: flex; flex-direction: column; gap: 2px; min-width: 150px; }
+.picks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; color: var(--ink-hi); }
+.picks li { display: flex; align-items: center; gap: 6px; }
+.picks .num { color: var(--muted); }
+.picks img, .stats img { opacity: 0.85; }
+.bonuses { flex: 1 1 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 12px 20px; }
+.bonus { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.bonus-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.bonus-head img { width: 28px; height: 28px; flex: none; }
+.bonus-head b { font-weight: 600; color: var(--ink-hi); }
+.aegis { margin-left: auto; padding: 0 8px; border-radius: 10px; border: 1px solid var(--line-hi); font: 12px var(--mono); color: var(--ink-mid); }
+.bonus p { margin: 0; font-size: 14px; color: var(--ink-mid); white-space: pre-line; }
+.bonus p.small { font-size: 13px; }
+.bonus p.muted { color: var(--muted); }
+.bonus p.aegis-note { color: var(--info); }
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; padding: 18px 20px 20px; }
+.slots section { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.slots h4 { margin: 0; display: flex; align-items: center; gap: 10px; font: 600 15px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.slots .wicon { width: 40px; height: 40px; }
+.tile { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--tile); min-width: 0; }
+/* A piece's gear tier: the pip column of Bungie's tier overlay (a 96px image
+   whose pips sit in a 10 by 61px strip near its left edge), at the right,
+   scaled to 80% to sit clear of a short tile's edges. */
+.tile:has(.tier) { padding-right: 30px; }
+.tile .tier { position: absolute; top: 50%; right: 10px; width: 10px; height: 61px; transform: translateY(-50%) scale(0.8); object-fit: none; object-position: -9px -30px; }
+.tile-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tile .score { font: 500 22px var(--mono); color: var(--ink-hi); }
+.tile .stats { display: flex; flex-wrap: wrap; gap: 2px 10px; font: 13px var(--mono); }
+.tile .stats span { display: inline-flex; align-items: center; gap: 3px; }
+.tile .stats .tuned { padding: 0 3px; border: 1px solid var(--muted); border-radius: 4px; }
+.tile .stats .zero { color: var(--muted); }
+.tile .stats .zero img { opacity: 0.4; }
+.legend i.box { border-color: var(--muted); background: transparent; }
+.tile .tuning { font-size: 13px; color: var(--muted); }
+.tile .note { font-size: 13px; color: var(--purge-note); }
+.tile .name { font-weight: 600; color: var(--ink-hi); }
+.chip { padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--purge); color: var(--bg); text-align: right; }
+.chip.keep { background: var(--keep); color: var(--bg); }
+/* A rescued piece's builds: one Keep: badge per build, with its stat icons. */
+.keeps { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.keeps .chip { display: inline-flex; align-items: center; gap: 4px; }
+.keeps img { width: 14px; height: 14px; filter: brightness(0); }
+.tile.purge { border-color: var(--purge-line); background: var(--bg); }
+.tile.purge .score { color: var(--ink-mid); }
+.tile.purge .stats { color: var(--muted); }
+.tile.rescued { border-color: var(--keep); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.exotics { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 14px; }
+.exotics .card { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.exo-head { display: flex; align-items: center; gap: 12px; }
+.exo-head > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.exo-head span { font-size: 14px; color: var(--ink-mid); }
+
+/* Builds */
+.builds { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 14px; }
+.build { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-color: var(--purge-line); }
+.build-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.build h3 { font-size: 20px; }
+.short-by { font-size: 13px; font-weight: 600; color: var(--purge); white-space: nowrap; }
+.stat-bar { display: grid; grid-template-columns: 64px 1fr 36px; align-items: center; gap: 10px; font-size: 14px; }
+.stat-bar > span:first-child { color: var(--ink-mid); }
+.stat-bar .num { text-align: right; }
+.stat-bar.short .num { color: var(--purge); }
+.track { position: relative; height: 8px; background: var(--line); border-radius: 4px; }
+.track i { display: block; height: 8px; border-radius: 4px; background: var(--keep-bar); }
+.stat-bar.short .track i { background: var(--purge); }
+.track::after { content: ""; position: absolute; top: -3px; left: 62.5%; width: 2px; height: 14px; background: var(--muted); }
+.rescues { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 14px; }
+.rescue { padding: 18px 20px; gap: 12px; border-color: var(--keep-line); }
+.rescue ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.rescue li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+.rescue li b { color: var(--ink-hi); }
+.rescue li span { color: var(--ink-mid); }
+
+/* Preferences */
+.folds { display: flex; flex-direction: column; gap: 16px; }
+.prefs { min-width: 640px; }
+.prefs th, .prefs td { padding: 8px 16px; }
+.prefs thead th { padding: 10px 16px; }
+.prefs .muted { color: var(--muted); }
+.pref-name { display: inline-flex; align-items: center; gap: 10px; }
+.prefs .wicon { width: 32px; height: 32px; border-radius: 3px; cursor: help; }
+.prefs .badges { display: inline-flex; gap: 4px; width: 104px; flex: none; }
+.stat-pick { display: inline-flex; align-items: center; gap: 6px; }
+.stat-pick img { opacity: 0.85; }
+
+/* Perk tooltip: one element, filled from the hidden tip-<plug hash> blocks */
+.tip { position: fixed; z-index: 10; max-width: 320px; padding: 10px 12px; border: 1px solid var(--line-hi); border-radius: 8px; background: #0c0c08f2; box-shadow: 0 6px 18px #000a; pointer-events: none; font-size: 14px; line-height: 1.45; }
+.tip b { display: block; margin-bottom: 4px; color: var(--ink-hi); }
+.tip p { margin: 0; color: var(--ink-mid); white-space: pre-line; }
+.tip p + b { margin-top: 10px; }
+.tip p.named { margin-top: 6px; color: var(--keep); }
+.text-icon { width: 16px; height: 16px; vertical-align: -3px; }
+
+/* Perk grids (grids.html.j2), on the weapons page and Popular: a column per
+   perk socket, every perk the weapon can roll there, most picked first, each
+   row edged and tinted in its heat for the side shown (data-side on the list
+   or card); the trait columns leave room for the pair lines between them. */
+.pg-wrap { overflow-x: auto; padding-bottom: 4px; }
+.pg { position: relative; display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: min-content; }
+.pc { flex: 1 1 0; min-width: 138px; max-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+.pc[data-col="trait1"] { margin-right: 38px; }
+.pc-head { display: flex; flex-direction: column; gap: 1px; padding: 0 2px 6px; border-bottom: 1px solid var(--line); }
+.pc-label { font: 600 13px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.conf { font: 11px var(--mono); color: var(--faint); }
+[data-side="pve"] .on-pvp, [data-side="pvp"] .on-pve { display: none !important; }
+.pl { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+/* A row: its perk's icon (--i, from its plug's rule) in its wishlist ring,
+   its name, and its share on the side shown. In the grid the rings step back
+   behind the heat: each list's colour half mixed into the card. */
+.pk {
+    --wl1: color-mix(in oklab, var(--keep) 55%, var(--card));
+    --wl2: color-mix(in oklab, var(--magenta) 55%, var(--card));
+    --wl3: color-mix(in oklab, var(--info) 55%, var(--card));
+    --wl4: color-mix(in oklab, var(--violet) 55%, var(--card));
+    position: relative; display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 3px 8px 3px 5px; border: 1px solid transparent; border-left: 5px solid var(--heat); border-radius: 6px; background: color-mix(in oklab, var(--heat) 22%, var(--card)); cursor: default;
+}
+.pk::before { content: ''; flex: none; width: 28px; height: 28px; box-sizing: border-box; border: 2px solid; border-color: var(--ring, var(--line)); border-radius: 50%; background: var(--i) center / 20px no-repeat; }
+.pk.pick::before, .pk.hit::before { background-color: color-mix(in srgb, var(--tint) 14%, var(--card)); }
+.pk.named::before { border-style: dashed; }
+.pk > span { flex: 1; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 12.5px; line-height: 1.15; color: var(--ink-mid); }
+.pk::after { font: 11px var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+[data-side="pve"] .pk::after { content: attr(data-a); }
+[data-side="pvp"] .pk::after { content: attr(data-b); }
+.pk.a0 { --ha: var(--h0); } .pk.a1 { --ha: var(--h1); } .pk.a2 { --ha: var(--h2); } .pk.a3 { --ha: var(--h3); }
+.pk.a4 { --ha: var(--h4); } .pk.a5 { --ha: var(--h5); } .pk.a6 { --ha: var(--h6); } .pk.a7 { --ha: var(--h7); }
+.pk.a8 { --ha: var(--h8); } .pk.a9 { --ha: var(--h9); } .pk.a10 { --ha: var(--h10); } .pk.an { --ha: var(--line-hi); }
+.pk.b0 { --hb: var(--h0); } .pk.b1 { --hb: var(--h1); } .pk.b2 { --hb: var(--h2); } .pk.b3 { --hb: var(--h3); }
+.pk.b4 { --hb: var(--h4); } .pk.b5 { --hb: var(--h5); } .pk.b6 { --hb: var(--h6); } .pk.b7 { --hb: var(--h7); }
+.pk.b8 { --hb: var(--h8); } .pk.b9 { --hb: var(--h9); } .pk.b10 { --hb: var(--h10); } .pk.bn { --hb: var(--line-hi); }
+[data-side="pve"] .pk { --heat: var(--ha); }
+[data-side="pvp"] .pk { --heat: var(--hb); }
+/* A trait that matters on neither count recedes: not among the side's five
+   most picked pairs, below 30% of its column's top, not the copy's and not
+   wishlisted; a focused trait's dimming (dim) takes over from it. */
+[data-side="pve"] .pk.qa:not(.owned, .named, .hit, .focus, .partner, .dim),
+[data-side="pvp"] .pk.qb:not(.owned, .named, .hit, .focus, .partner, .dim) { opacity: 0.5; }
+.pk.qa:hover, .pk.qb:hover, .pk.qa:focus-visible, .pk.qb:focus-visible { opacity: 1; }
+/* The copy shown on a weapon card: its perks outlined twice in their heat,
+   like the pair lines, over a strong heat fill; the perks it lacks step back
+   to a faint heat edge, a plain background and a dimmed icon (a card-coloured
+   veil over it, so the wishlist ring keeps full colour) and name. */
+.pk.owned { border-color: var(--heat); border-left: 6px solid var(--heat); box-shadow: inset 0 0 0 1px var(--heat); background: color-mix(in oklab, var(--heat) 45%, var(--card)); }
+.pk.owned > span { color: var(--ink-hi); font-weight: 600; }
+.pk.owned::after { color: var(--ink-hi); }
+.pg.has-copy .pk:not(.owned) { background: var(--card); border-left-color: color-mix(in oklab, var(--heat) 40%, var(--card)); }
+.pg.has-copy .pk:not(.owned) > span, .pg.has-copy .pk:not(.owned)::after { color: var(--faint); }
+.pg.has-copy .pk:not(.owned, .partner, .focus)::before { background-image: linear-gradient(#14140e8c, #14140e8c), var(--i); }
+.pg.has-copy .pk:is(.partner, .focus) > span { color: var(--ink-mid); }
+.pc[data-col^="trait"] .pk { cursor: pointer; }
+.pk:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* A focused trait and its partners are outlined in their heat, the colour of
+   their pair lines; a partner shows the pair's share of all the weapon's
+   pairs, in bold. */
+.pk.focus { border-color: var(--heat); box-shadow: 0 0 0 1px var(--heat); opacity: 1; }
+.pk.partner { border-color: var(--heat); opacity: 1; }
+.pk.partner::after, .pg.has-copy .pk.partner::after { content: attr(data-f); color: var(--heat); font-weight: 800; }
+.pk.dim { opacity: 0.22; }
+.pl.soft { opacity: 0.5; }
+@media (prefers-reduced-motion: no-preference) { .pk, .pl { transition: opacity 0.15s; } }
+/* Popular shows no copy, so a perk only a copy has isn't listed there. */
+.pop-body .pk.own { display: none; }
+.links { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.links path { fill: none; stroke-linecap: round; }
+.links .top { stroke-dasharray: 6 5; }
+svg.defs { position: absolute; }
+.tip .tip-pair { margin-top: 6px; }
+/* A perk tooltip's head: the name, and its rank in the column at the right. */
+.tip .tip-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+.tip .tip-head b { flex: 1; margin: 0; }
+.tip .tip-rank { font: 500 13px var(--mono); color: var(--ink-hi); }
+.tip .tip-stat { color: var(--ink-hi); }
+.tip .tip-range { margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+/* A grid's tooltip names each wishlist in its list's colour. */
+.tip p.named:has(.wl-name) { color: var(--ink-mid); }
+.tip .wl-name { color: var(--tint); font-weight: 600; }
+/* A grid's details line in two columns, filled row by row: hard content above
+   normal content, the margin of error above last observed. */
+.pop-meta { display: grid; grid-template-columns: auto auto; justify-content: start; gap: 6px 24px; margin: 0; font-size: 13px; color: var(--muted); }
+.pop-meta b { color: var(--ink-mid); font-weight: 600; }
+
+/* The grids' legend */
+.legend2 { display: flex; flex-wrap: wrap; gap: 14px 36px; margin: 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; color: var(--ink-mid); }
+.legend2 > div { display: flex; flex-direction: column; gap: 8px; }
+.legend2 .lg-title { font: 600 12px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.legend2 .lg-row { display: flex; align-items: center; gap: 10px; }
+.legend2 .note { font-size: 12px; color: var(--muted); max-width: 260px; }
+.legend2 .perk { width: 22px; height: 22px; --tint: var(--ink-mid); --ring: var(--ink-mid); }
+.legend2 .row-swatch { width: 34px; height: 18px; border-radius: 4px; border: 1px solid var(--heat-hi); border-left: 6px solid var(--heat-hi); box-shadow: inset 0 0 0 1px var(--heat-hi); background: color-mix(in oklab, var(--heat-hi) 45%, var(--card)); }
+.legend2 svg { flex: none; position: static; }
+.heat-bar { width: 180px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--heat-lo), var(--heat-mid), var(--heat-hi)); }
+.heat-ends { display: flex; justify-content: space-between; width: 180px; font: 11px var(--mono); color: var(--muted); }
+
+/* A weapon's confidence on a side, at its header's top right, in its level's
+   heat; very low is filled in a darker red, its text light. */
+.pop-chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 12px; border: 1px solid var(--line-hi); font: 12px var(--mono); color: var(--ink-mid); cursor: help; }
+.pop-chip.heat-hi { --conf: var(--heat-hi); }
+.pop-chip.heat-mid { --conf: var(--heat-mid); }
+.pop-chip.heat-lo { --conf: var(--heat-lo); }
+.pop-chip:is(.heat-hi, .heat-mid, .heat-lo) { border-color: var(--conf); color: var(--conf); }
+.pop-chip.heat-vlo { border-color: var(--heat-vlo); background: var(--heat-vlo); color: var(--ink-hi); }
+.pop-chip:focus-visible, .cert:focus-visible { outline: 2px solid var(--keep); outline-offset: 2px; }
+/* A weapon's Endgame badges, PvE above PvP (in red), each led by its side's
+   activity icon, Bungie's glyph used as a mask so it takes the badge's
+   colour. */
+.endgame { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.cert { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 8px; border-radius: 14px; border: 1px solid var(--ok); color: var(--ok); font: 600 13px var(--body); white-space: nowrap; cursor: help; }
+.cert.pvp { border-color: var(--bad); color: var(--bad); }
+.cert-icon { width: 18px; height: 18px; flex: none; background: currentColor; -webkit-mask: var(--icon) center / contain no-repeat; mask: var(--icon) center / contain no-repeat; }
+/* PvE and PvP buttons in their Endgame badges' colours: green and red. */
+.switch button.side-pve { --side: var(--ok); }
+.switch button.side-pvp { --side: var(--bad); }
+.switch button:is(.side-pve, .side-pvp) { color: var(--side); }
+.switch button:is(.side-pve, .side-pvp)[aria-pressed="true"] { border-color: var(--side); background: color-mix(in oklab, var(--side) 16%, transparent); }
+.switch button img { width: 18px; height: auto; margin-right: 6px; vertical-align: -3px; }
+/* A split weapon's pool label, on its own line under the family's name. */
+.fam-pool { font: 600 17px/1.1 var(--head); color: var(--ink-mid); }
+
+/* Popular */
+.intro .note { font-size: 15px; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.search { min-height: 44px; min-width: 0; width: min(280px, 100%); padding: 0 14px; border-radius: 22px; border: 1px solid var(--line-hi); background: var(--card); color: var(--ink-hi); font: 15px var(--body); }
+.search::placeholder { color: var(--faint); }
+.search:focus-visible, .type-select:focus-visible { outline: 2px solid var(--keep); outline-offset: 2px; }
+.type-select { min-height: 44px; padding: 0 12px; border-radius: 22px; border: 1px solid var(--line-hi); background: var(--card); color: var(--ink-mid); font: 600 15px var(--body); }
+.shown { font: 13px var(--mono); color: var(--muted); }
+.pops { display: flex; flex-direction: column; gap: 10px; }
+.pop-row > header { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; padding: 14px 20px; }
+.pop-rank { font: 500 26px var(--mono); color: var(--ink-hi); text-align: right; }
+.pop-name { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pop-name h5 { margin: 0; font: 700 24px/1.1 var(--head); color: var(--ink-hi); }
+.pop-name .sub2 { font-size: 13px; color: var(--muted); }
+/* A Popular row's confidence chip at the top right, light.gg and My Copies
+   under it, as on a weapon card. */
+.pop-facts { align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; font-size: 13px; color: var(--ink-mid); }
+.top-roll { display: flex; align-items: center; gap: 4px; }
+.top-roll .label { margin-right: 4px; font-size: 11px; }
+.top-roll .tp { width: 28px; height: 28px; border: 2px solid var(--heat-hi); border-radius: 50%; background: var(--i) center / 22px no-repeat; cursor: help; }
+.pop-body { display: flex; flex-direction: column; gap: 16px; padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+@media (max-width: 760px) {
+    .pop-row > header { grid-template-columns: 44px minmax(0, 1fr); }
+    .pop-facts { grid-column: 1 / -1; justify-content: flex-start; }
+}
+.empty { margin: 0; padding: 24px; color: var(--muted); }

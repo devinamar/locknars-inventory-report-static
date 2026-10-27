@@ -1,0 +1,65 @@
+{# Builds, by class: the three-stat builds the kept armor leaves short of 100, and the pieces kept past their cap for a build. #}
+{% import 'macros.html.j2' as m with context %}
+<section class="page" id="page-builds" hidden>
+<div class="intro">
+<h1>Builds</h1>
+<p>For each three-stat build, the best piece you keep in every slot, on raw stats with no tuning or masterwork. A build is covered when each of its three stats adds up to 100.</p>
+</div>
+
+{% call(k) m.class_switch(classes) %}{{ k.covered }} of 20{% endcall %}
+
+{% set short_by_class = dict(short_builds|group('armor_class')) %}
+{% set rescues_by_class = dict(rescues|group('armor_class')) %}
+{% for k in classes %}
+<div class="cls" data-cls="{{ k.armor_class }}"{% if not loop.first %} hidden{% endif %}>
+<section class="block">
+<div class="block-head">
+<h2>{{ k.armor_class }}</h2>
+<span><span class="num keep">{{ k.covered }}</span> of 20 builds covered · <span class="num purge">{{ 20 - k.covered }}</span> short</span>
+</div>
+{% if not k.covered %}
+<p class="callout">No build reaches 100: the {{ k.armor_class }} has {{ k.legendary }} Legendary piece{% if k.legendary != 1 %}s{% endif %}, not enough to add up to 100 in three stats.</p>
+{% elif k.covered == 20 %}
+<p class="callout">No gaps: every three-stat build reaches 100.</p>
+{% else %}
+<div class="builds">
+{% for b in short_by_class.get(k.armor_class, []) %}
+<article class="card build">
+<div class="build-head"><h3>{{ stat_names[b.stat_1] }} · {{ stat_names[b.stat_2] }} · {{ stat_names[b.stat_3] }}</h3><span class="short-by">Short by {{ 100 - b.low }}</span></div>
+{% for i in (1, 2, 3) %}
+{% set total = b['total_%d' % i] %}
+<div class="stat-bar{% if total < 100 %} short{% endif %}">
+<span>{{ stat_names[b['stat_%d' % i]] }}</span>
+<div class="track" aria-hidden="true"><i style="width: {{ '%.1f'|format([total / 1.6, 100]|min) }}%"></i></div>
+<span class="num">{{ total }}</span>
+</div>
+{% endfor %}
+</article>
+{% endfor %}
+</div>
+<p class="foot">The tick on each bar marks 100.</p>
+{% endif %}
+</section>
+
+{% set kept = rescues_by_class.get(k.armor_class, []) %}
+{% if kept %}
+<section class="block">
+<h2>Kept for builds</h2>
+<p>These pieces are past their set's cap, but without them a build would fall short of 100. One piece when one is enough, else two from different slots; the better set wins first.</p>
+<div class="rescues">
+{% for build, pieces in kept|group('stat_1', 'stat_2', 'stat_3') %}
+<article class="card pad rescue">
+<div class="build-head"><h3>{% for stat in build %}{{ stat_names[stat] }}{% if not loop.last %} · {% endif %}{% endfor %}</h3><span class="num keep">lowest {{ pieces[0].new_min }}</span></div>
+<ul>
+{% for p in pieces %}
+<li><b>{{ p.name }}</b><span>{{ p.slot }} · {{ p.set_name }}{% if p.grade %}, grade {{ p.grade }}{% endif %}</span></li>
+{% endfor %}
+</ul>
+</article>
+{% endfor %}
+</div>
+</section>
+{% endif %}
+</div>
+{% endfor %}
+</section>

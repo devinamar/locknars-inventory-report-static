@@ -1,0 +1,71 @@
+{# Popular: every weapon d2-perk-popularity scores, PvE or PvP (the side switch), in rank order, each row opening the weapon's perk grid (grids.html.j2) with no copy shown, and one you have a Roll Quality card for going to it (My Copies). The toolbar filters the rows by name, type, slot, ammo and the vault (report.js); the wishlist switch picks the list whose rings show. #}
+{% import 'macros.html.j2' as m with context %}
+{% import 'text.j2' as t with context %}
+{% set options = dict(popular_options|group('kind')) %}
+{% set by_side = dict(popularity|group('side')) %}
+<section class="page" id="page-popular" hidden>
+<div class="intro">
+<h1>Popular</h1>
+<p>The weapons players finish activities with most, ranked by d2-perk-popularity's votes (one per copy, hard content counting for more), and the perks they pick on them.</p>
+{% if totals.scores_at %}
+<p class="note">Scores of {{ totals.scores_at|day }}.</p>
+{% endif %}
+</div>
+{% if popularity %}
+<section class="block">
+<div class="switch-row">
+<span class="label">Weapons</span>
+<div class="switch" role="group" aria-label="Side" data-key="side">
+{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) %}
+<button type="button" class="side-{{ side }}" data-value="{{ side }}" aria-pressed="{% if loop.first %}true{% else %}false{% endif %}">{{ label }} <span class="num">{{ by_side.get(side, [])|length }}</span></button>
+{% endfor %}
+</div>
+</div>
+{% if wishlists|length > 1 %}
+{# The wishlist switch: the list whose rings the grids show, every list's for All lists. #}
+<div class="switch-row">
+<span class="label">Wishlist</span>
+<div class="switch" role="group" aria-label="Wishlist" data-key="wl">
+<button type="button" data-value="*" aria-pressed="true">All lists</button>
+{% for w in wishlists %}
+<button type="button" data-value="{{ w.key }}" aria-pressed="false"><i class="wl-dot l{{ loop.index }}" aria-hidden="true"></i>{{ w.label }}</button>
+{% endfor %}
+</div>
+</div>
+{% endif %}
+{{ m.legend(false) }}
+<div class="toolbar">
+<input class="search" type="search" placeholder="Search weapons" aria-label="Search weapons">
+<select class="type-select" aria-label="Weapon type"><option value="">All types</option>{% for o in options.get('type', []) %}<option>{{ o.value }}</option>{% endfor %}</select>
+<div class="switch multi" role="group" aria-label="Slot" data-filter="slot"><button type="button" data-value="" aria-pressed="true">All</button>{% for o in options.get('slot', []) %}<button type="button" data-value="{{ o.value }}" aria-pressed="false">{{ o.label }}</button>{% endfor %}</div>
+<div class="switch multi" role="group" aria-label="Ammo" data-filter="ammo"><button type="button" data-value="" aria-pressed="true">All</button>{% for o in options.get('ammo', []) %}<button type="button" data-value="{{ o.value }}" aria-pressed="false"><img src="{{ o.icon }}" alt="">{{ o.label }}</button>{% endfor %}</div>
+<div class="switch flip" role="group" aria-label="Vault"><button type="button" data-filter="owned" aria-pressed="false">In my vault</button></div>
+<span class="shown"></span>
+</div>
+{% for side, rows in popularity|group('side') %}
+<div class="pops" data-side="{{ side }}"{% if side != 'pve' %} hidden{% endif %}>
+{% for w in rows %}
+<article class="card pop-row" data-n="{{ w.name|lower }}" data-type="{{ w.type }}" data-slot="{{ w.slot }}" data-ammo="{{ w.ammo }}"{% if w.owned %} data-owned=""{% endif %}>
+<header>
+<span class="pop-rank">#{{ w.rank }}</span>
+<div class="pop-name">
+<h5><button type="button" class="toggle" aria-expanded="false" aria-controls="pv-{{ side }}-{{ w.grid_id }}">{{ m.chevron() }}<span class="wicon" role="img" aria-label="{{ w.type }}">{% if w.icon %}<img src="{{ w.icon }}" alt="" loading="lazy">{% endif %}{% if w.watermark %}<img src="{{ w.watermark }}" alt="" loading="lazy">{% endif %}</span><span class="fam-name"><span class="fam-title">{{ w.family }}{% if w.ammo %}<img class="ammo" src="{{ w.ammo_icon }}" alt="{{ w.ammo|capitalize }} ammo" title="{{ w.ammo|capitalize }} ammo" loading="lazy">{% endif %}</span>{% if w.pool %}<span class="fam-pool">{{ w.pool }}</span>{% endif %}</span></button></h5>
+<span class="sub2">{{ w.type }}{% if w.season_name %} · {{ t.season(w) }}{% endif %}{% if w.source %} · {{ w.source }}{% endif %}</span>
+{{ m.endgame_badges(w) }}
+{% if w.top_perks %}
+<span class="top-roll"><span class="label">Most picked</span>{% for h in w.top_perks.split() %}<i class="tp" data-tip="p{{ h }}"></i>{% endfor %}</span>
+{% endif %}
+</div>
+<div class="pop-facts">{{ m.confidence_chip(w.confidence, w.side, w.grid_id) }}<div class="fam-links"><a class="lgg" href="https://www.light.gg/db/items/{{ w.item_hash }}/" target="_blank" rel="noopener">light.gg</a>{% if w.card %}<button type="button" class="goto" data-goto="{{ w.grid_id }}">My Copies</button>{% endif %}</div></div>
+</header>
+<div class="pop-body" id="pv-{{ side }}-{{ w.grid_id }}" data-g="{{ w.grid_id }}" hidden></div>
+</article>
+{% endfor %}
+</div>
+{% endfor %}
+<p class="empty" hidden>No weapon matches. Clear the search or the filters.</p>
+</section>
+{% else %}
+<p class="note">No scores are stored yet: d2-perk-popularity's file hasn't been downloaded.</p>
+{% endif %}
+</section>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ player }}{% if code %}#{{ code }}{% endif %} · Destiny 2 Inventory Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Barlow:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;800&amp;display=swap">
+<style>
+{% include 'styles.css' %}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+<div class="brand"><b>Vault report</b><span>{{ player }}{% if totals.checked_at %} · {{ totals.checked_at|day }}{% endif %}</span></div>
+<nav aria-label="Report pages">
+<a href="#summary">Summary</a>
+<a href="#weapons">Weapons</a>
+<a href="#popular">Popular</a>
+<a href="#armor">Armor sets</a>
+<a href="#builds">Builds</a>
+<a href="#exotics">Exotics</a>
+<a href="#preferences">Preferences</a>
+</nav>
+</header>
+<main>
+{% include 'summary.html.j2' %}
+{% include 'weapons.html.j2' %}
+{% include 'popular.html.j2' %}
+{% include 'armor.html.j2' %}
+{% include 'builds.html.j2' %}
+{% include 'exotics.html.j2' %}
+{% include 'preferences.html.j2' %}
+</main>
+</div>
+{% include 'grids.html.j2' %}
+<div id="tip" class="tip" role="tooltip" hidden></div>
+<script>
+{% include 'report.js' %}
+</script>
+</body>
+</html>

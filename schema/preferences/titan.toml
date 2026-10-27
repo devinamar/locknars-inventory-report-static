@@ -1,0 +1,54 @@
+# Default armor preferences: Titan exotic armor, one entry per exotic.
+# open_db adds each entry the armor_preference table lacks (names compared
+# ignoring case) and never changes a saved one.
+#   stats = up to three priority stats, best first: health, melee, grenade,
+#           super_stat, class_stat, weapons
+
+# Guessed from each exotic's perk description; review before relying on them.
+"Abeyant Leap"                = { stats = ["class_stat", "health"] }
+"ACD/0 Feedback Fence"        = { stats = ["melee", "health"] }
+"Actium War Rig"              = { stats = ["weapons"] }
+"Aeon Safe"                   = { stats = ["health", "melee"] }
+"An Insurmountable Skullfort" = { stats = ["melee", "health"] }
+"Antaeus Wards"               = { stats = ["class_stat", "health"] }
+"Arbor Warden"                = { stats = ["class_stat", "grenade"] }
+"Armamentarium"               = { stats = ["grenade", "weapons"] }
+"Ashen Wake"                  = { stats = ["grenade"] }
+"Blastwave Striders"          = { stats = ["melee", "health"] }
+"Cadmus Ridge Lancecap"       = { stats = ["weapons", "class_stat"] }
+"Citan's Ramparts"            = { stats = ["class_stat", "weapons"] }
+"Crest of Alpha Lupi"         = { stats = ["class_stat", "health"] }
+"Cuirass of the Falling Star" = { stats = ["super_stat", "melee"] }
+"Doom Fang Pauldron"          = { stats = ["super_stat", "melee"] }
+"Dunemarchers"                = { stats = ["melee"] }
+"Eternal Warrior"             = { stats = ["super_stat", "weapons"] }
+"Hallowfire Heart"            = { stats = ["super_stat", "grenade", "class_stat"] }
+"Hazardous Propulsion"        = { stats = ["class_stat", "weapons"] }
+"Heart of Inmost Light"       = { stats = ["grenade", "melee", "class_stat"] }
+"Helm of Saint-14"            = { stats = ["super_stat", "weapons"] }
+"Hoarfrost-Z"                 = { stats = ["class_stat", "weapons"] }
+"Icefall Mantle"              = { stats = ["class_stat", "health"] }
+"Khepri's Horn"               = { stats = ["class_stat"] }
+"Lion Rampant"                = { stats = ["weapons"] }
+"Loreley Splendor Helm"       = { stats = ["class_stat", "health"] }
+"Mask of the Quiet One"       = { stats = ["health", "grenade"] }
+"Melas Panoplia"              = { stats = ["melee"] }
+"Mk. 44 Stand Asides"         = { stats = ["class_stat", "weapons"] }
+"No Backup Plans"             = { stats = ["weapons", "melee", "health"] }
+"One-Eyed Mask"               = { stats = ["health", "weapons"] }
+"Peacekeepers"                = { stats = ["weapons"] }
+"Peregrine Greaves"           = { stats = ["melee"] }
+"Phoenix Cradle"              = { stats = ["grenade", "health"] }
+"Point-Contact Cannon Brace"  = { stats = ["melee"] }
+"Praxic Vestment"             = { stats = ["melee", "weapons"] }
+"Precious Scars"              = { stats = ["health", "weapons"] }
+"Pyrogale Gauntlets"          = { stats = ["super_stat"] }
+"Second Chance"               = { stats = ["melee"] }
+"Severance Enclosure"         = { stats = ["melee", "health"] }
+"Stoicism"                    = { stats = ["melee", "class_stat"] }
+"Stronghold"                  = { stats = ["weapons", "health"] }
+"Synthoceps"                  = { stats = ["melee", "weapons"] }
+"The Path of Burning Steps"   = { stats = ["weapons"] }
+"Ursa Furiosa"                = { stats = ["super_stat", "grenade"] }
+"Wishful Ignorance"           = { stats = ["melee", "health"] }
+"Wormgod Caress"              = { stats = ["melee", "weapons"] }

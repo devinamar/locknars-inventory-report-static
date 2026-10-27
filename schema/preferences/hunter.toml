@@ -1,0 +1,54 @@
+# Default armor preferences: Hunter exotic armor, one entry per exotic.
+# open_db adds each entry the armor_preference table lacks (names compared
+# ignoring case) and never changes a saved one.
+#   stats = up to three priority stats, best first: health, melee, grenade,
+#           super_stat, class_stat, weapons
+
+# Guessed from each exotic's perk description; review before relying on them.
+"Aeon Swift"               = { stats = ["health", "melee"] }
+"Assassin's Cowl"          = { stats = ["melee", "health"] }
+"Athrys's Embrace"         = { stats = ["melee", "weapons"] }
+"Balance of Power"         = { stats = ["class_stat", "health"] }
+"Blight Ranger"            = { stats = ["super_stat", "weapons"] }
+"Caliban's Hand"           = { stats = ["melee", "health"] }
+"Celestial Nighthawk"      = { stats = ["super_stat", "weapons"] }
+"Cyrtarachne's Facade"     = { stats = ["grenade", "health"] }
+"Foetracer"                = { stats = ["weapons", "grenade"] }
+"Fortune's Favor"          = { stats = ["health", "weapons"] }
+"Fr0st-EE5"                = { stats = ["class_stat", "grenade", "melee"] }
+"Gemini Jester"            = { stats = ["class_stat"] }
+"Gifted Conviction"        = { stats = ["class_stat", "melee", "health"] }
+"Graviton Forfeit"         = { stats = ["class_stat", "melee", "grenade"] }
+"Gwisin Vest"              = { stats = ["super_stat", "class_stat"] }
+"Gyrfalcon's Hauberk"      = { stats = ["weapons", "class_stat"] }
+"Khepri's Sting"           = { stats = ["melee", "class_stat"] }
+"Knucklehead Radar"        = { stats = ["weapons"] }
+"Liar's Handshake"         = { stats = ["melee", "health"] }
+"Lucky Pants"              = { stats = ["weapons"] }
+"Lucky Raspberry"          = { stats = ["grenade"] }
+"Mask of Bakris"           = { stats = ["class_stat", "weapons"] }
+"Mask of Fealty"           = { stats = ["melee"] }
+"Mechaneer's Tricksleeves" = { stats = ["weapons"] }
+"Moirai"                   = { stats = ["melee"] }
+"Mothkeeper's Wraps"       = { stats = ["grenade", "health"] }
+"Oathkeeper"               = { stats = ["weapons"] }
+"Omnioculus"               = { stats = ["melee", "class_stat", "health"] }
+"Ophidia Spathe"           = { stats = ["melee", "class_stat"] }
+"Orpheus Rig"              = { stats = ["super_stat", "class_stat"] }
+"Radiant Dance Machines"   = { stats = ["weapons", "class_stat"] }
+"Raiden Flux"              = { stats = ["super_stat"] }
+"Raiju's Harness"          = { stats = ["super_stat"] }
+"Relativism"               = { stats = ["weapons", "class_stat"] }
+"Renewal Grasps"           = { stats = ["grenade", "health"] }
+"Sealed Ahamkara Grasps"   = { stats = ["melee", "weapons"] }
+"Shards of Galanor"        = { stats = ["super_stat", "melee"] }
+"Shinobu's Vow"            = { stats = ["grenade", "health"] }
+"Speedloader Slacks"       = { stats = ["class_stat", "weapons"] }
+"St0mp-EE5"                = { stats = ["health", "weapons"] }
+"Star-Eater Scales"        = { stats = ["super_stat", "health"] }
+"The Bombardiers"          = { stats = ["class_stat"] }
+"The Dragon's Shadow"      = { stats = ["class_stat", "weapons"] }
+"The Sixth Coyote"         = { stats = ["class_stat", "weapons"] }
+"Triton Vice"              = { stats = ["weapons", "melee"] }
+"Wormhusk Crown"           = { stats = ["class_stat", "health"] }
+"Young Ahamkara's Spine"   = { stats = ["grenade", "melee"] }

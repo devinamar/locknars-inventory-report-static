@@ -1,0 +1,103 @@
+{# Summary: the player, what to review and purge, builds, armor by class and the data sources. #}
+{% import 'macros.html.j2' as m with context %}
+<section class="page summary" id="page-summary">
+<div class="intro">
+<h1 class="player">{{ player }}{% if code %}<span>#{{ code }}</span>{% endif %}</h1>
+<p class="kicker">Destiny 2 Inventory Report</p>
+<p class="totals"><span><b class="num">{{ totals.weapons }}</b> weapons</span><span><b class="num">{{ totals.armor }}</b> armor pieces</span></p>
+</div>
+
+<div class="cards">
+<article class="card pad">
+<div class="card-head"><h2>Weapons</h2><a href="#weapons">Review weapons →</a></div>
+<p class="big"><span class="num">{{ totals.to_review }}</span> to review</p>
+<p class="sub">Weapons with multiple copies</p>
+<dl class="facts">
+<dt class="num">{{ totals.true_duplicates }}</dt><dd>true duplicates</dd>
+{% if totals.below_legendary %}
+<dt class="num">{{ totals.below_legendary }}</dt><dd>copies below Legendary, not compared</dd>
+{% endif %}
+<dt class="num">{{ totals.matched }}</dt><dd>copies with wishlist matches</dd>
+<dt class="num">{{ totals.uncovered }}</dt><dd>copies missing wishlist entries</dd>
+</dl>
+</article>
+
+<article class="card pad">
+<div class="card-head"><h2>Armor</h2><a href="#armor">See armor sets →</a></div>
+<p class="big"><span class="num purge">{{ totals.armor_to_purge }}</span> to purge
+{% if armor_purge %}
+{{ m.purge_button(armor_purge) }}
+{% endif %}
+</p>
+{% if purge_counts %}
+<div class="share" aria-hidden="true">
+{% for r in purge_counts %}
+<i class="r{{ loop.index }}" style="width: {{ '%.1f'|format(100 * r.n / totals.armor_to_purge) }}%"></i>
+{% endfor %}
+</div>
+<ul class="reasons">
+{% for r in purge_counts %}
+<li><i class="swatch r{{ loop.index }}" aria-hidden="true"></i><span class="num">{{ r.n }}</span><span>{{ armor_reasons[r.reason][0] }}</span></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if totals.rescued %}
+<p class="callout"><span class="num keep">{{ totals.rescued }}</span> rescues for triple 100 stat builds</p>
+{% endif %}
+</article>
+</div>
+
+<div class="cards">
+<article class="card pad">
+<div class="card-head"><h2>Builds</h2><a href="#builds">See builds →</a></div>
+<p class="sub">Three-stat builds the armor you keep takes to 100 in each stat.</p>
+{% for k in classes %}
+<div class="reach">
+<b>{{ k.armor_class }}</b>
+<div class="meter" aria-hidden="true"><i style="width: {{ k.covered * 5 }}%"></i></div>
+<span class="num">{{ k.covered }} of 20</span>
+</div>
+{% endfor %}
+</article>
+
+<article class="card pad">
+<h2>Armor by class</h2>
+<table>
+<thead><tr><th scope="col">Class</th><th scope="col" class="right">Legendary</th><th scope="col" class="right">Exotic</th></tr></thead>
+<tbody>
+{% for k in classes %}
+<tr><th scope="row">{{ k.armor_class }}</th><td class="num right">{{ k.legendary }}</td><td class="num right">{{ k.exotic }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</article>
+</div>
+
+{% set problems = sources|rejectattr('ok')|list %}
+<details class="fold sources">
+<summary>
+{{ m.chevron() }}
+<h2>Data sources</h2>
+{% if problems %}
+<span class="state"><svg role="img" aria-label="A source has a problem" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#ff1a1a"></circle><path d="M12 6.5v7" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"></path><circle cx="12" cy="17.5" r="1.5" fill="#ffffff"></circle></svg>{{ problems|length }} source{% if problems|length > 1 %}s have{% else %} has{% endif %} a problem</span>
+{% else %}
+<span class="state"><svg role="img" aria-label="All sources up to date" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#c0f030"></circle><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#0c0c08" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>All {{ sources|length }} up to date</span>
+{% endif %}
+</summary>
+<div class="scroll">
+<table>
+<thead><tr><th scope="col">Source</th><th scope="col">What it gives</th><th scope="col">Status</th><th scope="col">Checked</th></tr></thead>
+<tbody>
+{% for s in sources %}
+<tr>
+<th scope="row">{% if s.url %}<a href="{{ s.url }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}</th>
+<td>{{ s.gives }}</td>
+<td><span class="status{% if not s.ok %} bad{% endif %}">{{ s.status }}</span></td>
+<td>{% if s.checked_at %}{{ s.checked_at|day }}{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+</section>

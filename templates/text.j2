@@ -1,0 +1,19 @@
+{# Plain-text pieces both report formats share. #}
+
+{# A piece's non-zero stats, like "Hlt 20 Gre 30 Sup 25". #}
+{% macro stat_line(p) %}{% for key, label in stat_short.items() if p[key] %}{{ label }} {{ p[key] }}{% if not loop.last %} {% endif %}{% endfor %}{% endmacro %}
+
+{# A set's or exotic's stat picks with their weights. #}
+{% macro picks(p) %}{% for key in [p.stat_1, p.stat_2, p.stat_3] if key %}{{ stat_names[key] }} ×{{ 4 - loop.index }}{% if not loop.last %} · {% endif %}{% else %}No stat picks: scored on the stat total{% endfor %}{% endmacro %}
+
+{# The stats a piece's tuning socket can raise, and what the swap its score uses adds; a piece below Tier 5 has no socket, so its gear tier instead. #}
+{% macro tuning(p) %}{% if p.tuning %}tunes {% if p.tuning.count(',') == 5 %}any{% else %}{{ p.tuning|short }}{% endif %}{% if p.tuning_gain %} · {{ p.best_tuning }} adds {{ p.tuning_gain|int }}{% endif %}{% else %}{% if p.gear_tier %}gear tier {{ p.gear_tier }} · {% endif %}no tuning socket{% endif %}{% endmacro %}
+
+{# A weapon's season, like "S28 Monument of Triumph". #}
+{% macro season(c) %}S{{ c.season_num }} {{ c.season_name }}{% endmacro %}
+
+{# A weapon copy's kill count, like "2,296 PvE kills": its plugged tracker's, as DIM reads it. #}
+{% macro kills(c) %}{{ '{:,}'.format(c.kills) }} {{ c.kill_kind }} kills{% endmacro %}
+
+{# The builds a rescued piece is kept for, like "Mel·Gre·Cls, Sup·Cls·Wep". #}
+{% macro builds(p) %}{% for b in p.builds.split(';') %}{{ b|short }}{% if not loop.last %}, {% endif %}{% endfor %}{% endmacro %}

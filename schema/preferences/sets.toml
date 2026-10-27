@@ -1,0 +1,69 @@
+# Default armor preferences: armor sets.
+# open_db adds each entry the armor_preference table lacks (names compared
+# ignoring case) and never changes a saved one.
+#   stats = up to three priority stats, best first: health, melee, grenade,
+#           super_stat, class_stat, weapons
+#   grade = S to F
+#   rank  = place within the grade, 1 first
+# Lines marked guessed take their grade and rank from The Aegis's sheet and
+# their stats from the set's bonuses; review before relying on them.
+
+"Atheon's Memory"      = { stats = ["health", "super_stat", "weapons"], grade = "S", rank = 1 }
+"Exodus Down"          = { stats = ["health"], grade = "S", rank = 2 }
+"Promised"             = { stats = ["weapons", "health"], grade = "S", rank = 3 }  # guessed
+"TM Custom"            = { stats = ["weapons"], grade = "S", rank = 4 }
+"CODA"                 = { stats = ["weapons", "grenade", "melee"], grade = "S", rank = 5 }
+"Smoke Jumper Set"     = { stats = ["health", "weapons"], grade = "A", rank = 1 }
+"Legacy's Oath"        = { stats = ["melee", "health"], grade = "A", rank = 2 }
+"Crystocrene"          = { stats = ["weapons", "health"], grade = "A", rank = 3 }
+"Nezarec's Nightmare"  = { stats = ["grenade", "melee", "weapons"], grade = "A", rank = 4 }
+"Pantheos Resplendent" = { stats = ["weapons", "health"], grade = "A", rank = 5 }
+"Oryx's Memory"        = { stats = ["weapons", "health"], grade = "A", rank = 6 }
+"Deep Explorer"        = { stats = ["health", "weapons"], grade = "A", rank = 7 }
+"AION Adapter"         = { stats = ["weapons", "health"], grade = "A", rank = 8 }
+"Great Hunt"           = { stats = ["grenade", "weapons"], grade = "A", rank = 9 }
+"Techeun's Regalia"    = { stats = ["health", "melee", "grenade"], grade = "A", rank = 10 }
+"Sage Protector"       = { stats = ["weapons", "grenade", "class_stat"], grade = "A", rank = 11 }
+"Crota's Memory"       = { stats = ["health", "melee"], grade = "A", rank = 12 }
+"Iron Panoply Set"     = { stats = ["health", "weapons"], grade = "B", rank = 1 }
+"Iron Battalion Set"   = { stats = ["super_stat", "weapons", "class_stat"], grade = "B", rank = 2 }
+"Reverie Dawn"         = { stats = ["health"], grade = "B", rank = 3 }
+"Swordmaster"          = { stats = ["weapons", "health", "melee"], grade = "B", rank = 4 }
+"Yearning Echo"        = { stats = ["health", "weapons", "super_stat"], grade = "B", rank = 5 }
+"Ferropotent"          = { stats = ["health", "weapons"], grade = "B", rank = 6 }
+"Techsec"              = { stats = ["weapons"], grade = "B", rank = 7 }
+"Twofold Crown"        = { stats = ["weapons", "health"], grade = "B", rank = 8 }
+"Last Discipline"      = { stats = ["weapons"], grade = "B", rank = 9 }
+"Thunderhead"          = { stats = ["grenade", "melee", "weapons"], grade = "B", rank = 10 }
+"Disaster Corps Set"   = { stats = ["weapons", "health"], grade = "B", rank = 11 }
+"Bushido"              = { stats = ["weapons", "health"], grade = "B", rank = 12 }
+"Collective Psyche"    = { stats = ["health", "grenade", "melee"], grade = "C", rank = 1 }
+"AION Renewal"         = { stats = ["weapons", "health"], grade = "C", rank = 2 }
+"Seventh Seraph"       = { stats = ["weapons", "grenade", "health"], grade = "C", rank = 3 }
+"Dark Age"             = { stats = ["class_stat", "melee", "health"], grade = "C", rank = 4 }
+"Apostate's Blade"     = { stats = ["health", "melee"], grade = "C", rank = 5 }
+"Dreambane"            = { stats = ["weapons", "health", "melee"], grade = "C", rank = 6 }
+"Flain"                = { stats = ["health", "grenade", "class_stat"], grade = "C", rank = 7 }
+"Lustrous"             = { stats = ["health", "weapons"], grade = "C", rank = 8 }
+"Luminopotent"         = { stats = ["weapons", "grenade", "melee"], grade = "C", rank = 9 }
+"Veritas"              = { stats = ["melee", "health"], grade = "C", rank = 10 }
+"Taken King"           = { stats = ["super_stat", "melee", "health"], grade = "C", rank = 11 }
+"Cyberserpent Null"    = { stats = ["weapons"], grade = "C", rank = 12 }
+"Resonant Fury"        = { stats = ["health", "melee", "weapons"], grade = "C", rank = 13 }
+"Eutechnology"         = { stats = ["weapons", "grenade", "class_stat"], grade = "C", rank = 14 }
+"Triumphal Anthem"     = { stats = ["weapons"], grade = "C", rank = 15 }
+"Wayward Psyche Set"   = { stats = ["weapons", "super_stat", "health"], grade = "C", rank = 16 }  # guessed
+"Spacewalk"            = { stats = ["grenade", "weapons"], grade = "D", rank = 1 }
+"Circuit"              = { stats = ["health", "weapons"], grade = "D", rank = 2 }
+"Wildwood"             = { stats = ["weapons", "health"], grade = "D", rank = 3 }
+"Kentarch 3"           = { stats = ["weapons", "health", "melee"], grade = "D", rank = 4 }
+"First Ascent"         = { stats = ["grenade", "melee", "weapons"], grade = "D", rank = 5 }
+"Thriving Survivor"    = { stats = ["grenade", "weapons"], grade = "D", rank = 6 }
+"Wild Anthem"          = { stats = ["weapons"], grade = "E", rank = 1 }
+"Shrewd Survivor"      = { stats = ["weapons"], grade = "E", rank = 2 }
+"Per Audacia"          = { stats = ["weapons"], grade = "E", rank = 3 }  # guessed
+"Raptor's"             = { stats = [], grade = "F", rank = 1 }
+"Frumious"             = { stats = [], grade = "F", rank = 2 }
+"Red Moon Phantom"     = { stats = [], grade = "F", rank = 3 }
+"Cruel Electrum"       = { stats = ["weapons"], grade = "F", rank = 4 }  # guessed
+"New Demotic"          = { stats = ["weapons"], grade = "F", rank = 5 }

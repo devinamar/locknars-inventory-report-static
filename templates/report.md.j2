@@ -1,0 +1,298 @@
+{# The Markdown copy of the report, for a language model to review: the same six pages, each section saying what it shows, how it was derived and how to read it. #}
+{% import 'text.j2' as t with context %}
+{% set grid_by_id = dict(grid|group('grid_id')) %}
+{% set top_pairs = dict(popular_pairs|group('side', 'name')) %}
+{% set sets_by_class = dict(set_pieces|group('armor_class')) %}
+{% set legacy_by_class = dict(legacy|group('armor_class')) %}
+{% set short_by_class = dict(short_builds|group('armor_class')) %}
+{% set rescues_by_class = dict(rescues|group('armor_class')) %}
+{% set dupes_by_class = dict(exotic_dupes|group('armor_class')) %}
+# {{ player }}{% if code %}#{{ code }}{% endif %}: Destiny 2 Inventory Report
+
+{% if totals.checked_at %}Inventory checked {{ totals.checked_at|day }}: {% endif %}{{ totals.weapons }} weapons and {{ totals.armor }} armor pieces. This is the Markdown copy of the HTML report, for a language model to review. A DIM query (`id:… or id:…`) pasted into DIM's search selects the copies it names.
+
+## Summary
+
+**What this shows.** The run's headline numbers: the weapons to review (those with more than one copy) and the true duplicates, the armor pieces to purge, the three-stat builds the kept armor covers, and each class's armor.
+
+**How it was derived.** Counted from the stored results: Roll Quality's cards with more than one copy for the weapons to review, the weapon_pruning table for the true duplicates, the v_armor_pruning view for the armor to purge (pieces rescued for a build stay), and v_armor_reach for the builds.
+
+**Reading it.** Each later section lists what is counted here.
+
+- **Weapons:** {{ totals.to_review }} to review: weapons with multiple copies, to compare in Roll Quality. {{ totals.true_duplicates }} true duplicates{% if totals.below_legendary %}, and {{ totals.below_legendary }} copies below Legendary, not compared{% endif %}. {{ totals.matched }} copies with wishlist matches; {{ totals.uncovered }} copies missing wishlist entries.
+- **Armor:** {{ totals.armor_to_purge }} to purge.
+{% for r in purge_counts %}
+  - {{ r.n }}: {{ armor_reasons[r.reason][0] }}. {{ armor_reasons[r.reason][1] }}
+{% endfor %}
+{% if totals.rescued %}
+- {{ totals.rescued }} rescues for triple 100 stat builds.
+{% endif %}
+
+| Class | Legendary | Exotic | Builds covered (of 20) |
+|---|---:|---:|---:|
+{% for k in classes %}
+| {{ k.armor_class }} | {{ k.legendary }} | {{ k.exotic }} | {{ k.covered }} |
+{% endfor %}
+
+### Data sources
+
+**What this shows.** How current each outside source was this run.
+
+**How it was derived.** Each extract step records its source's outcome: up to date (downloaded, or unchanged since the last download), download failed with the last good copy used, download failed with nothing stored, or skipped (DIM without a Bungie login or a DIM API key).
+
+**Reading it.** A source with a problem weakens what depends on it: a stale wishlist means scores rest on an old copy of that list, and without DIM the tags and notes are missing.
+
+| Source | What it gives | Status | Checked |
+|---|---|---|---|
+{% for s in sources %}
+| {% if s.url %}[{{ s.name }}]({{ s.url }}){% else %}{{ s.name }}{% endif %} | {{ s.gives }} | {{ s.status }} | {% if s.checked_at %}{{ s.checked_at|day }}{% endif %} |
+{% endfor %}
+
+## Weapons
+
+### True duplicates
+
+**What this shows.** Weapon copies identical to another copy of the same weapon, and any copy below Legendary, which isn't compared.
+
+**How it was derived.** Copies below Legendary are flagged without comparing them. Among the rest, copies of one family whose element, frame (archetype) and every perk socket match are true duplicates: the copy with the highest gear tier, then the best wishlist score, then the oldest (lowest itemInstanceId) stays, and the others are listed.
+
+**Reading it.** Each true duplicate names the copy kept in its place, which has the same roll.
+
+{% set duplicates = weapon_flags|selectattr('reason', 'equalto', 'exact_duplicate')|list %}
+{% set below = weapon_flags|selectattr('reason', 'equalto', 'below_legendary')|list %}
+{% if duplicates %}
+{{ duplicates|length }} true duplicates. DIM: `{{ duplicates|dim }}`
+
+{% for w in duplicates %}
+- {{ w.name }} ({{ w.wtype }}) `id:{{ w.instance_id }}`, kept in its place: `id:{{ w.keeper_id }}`
+{% endfor %}
+
+{% else %}
+No true duplicates: no two copies of one weapon match in element, frame and every perk.
+
+{% endif %}
+{% if below %}
+Below Legendary, not compared ({{ below|length }}). DIM: `{{ below|dim }}`
+
+{% for w in below %}
+- {{ w.name }} ({{ w.wtype }}) `id:{{ w.instance_id }}`
+{% endfor %}
+
+{% endif %}
+### Roll Quality
+
+**What this shows.** Every weapon with a copy left, one card per weapon: the weapon d2-perk-popularity scores the copy's version as (a family whose versions roll different trait pools is a card per pool, the pool in brackets), else its family. For each: its popularity on each side, the wishlists with rolls for it, then each copy, best PvE first, with its popularity scores, wishlist matches and perks.
+
+**How it was derived.** Copies group by card; a family is the name without an Adept, Timelost or Harrowed suffix. A copy's popularity score on a side is the mean, over the perk columns d2-perk-popularity scores for its weapon, of its best perk's share of the column's votes against the column's most picked perk's (100% when it has the favourite in every column); its two trait columns count as one, scored by its best trait pair against the most picked pair, or each on its own when the weapon has no pair scores. Copies rank by that score, then wishlist matches, gear tier and age (lowest itemInstanceId). A copy's perks in a column are the ones it can switch to plus the one plugged. A copy completes a wishlist roll when it can equip every perk the roll names, trait perks in different trait sockets; a roll naming no perks fits every copy of its weapon, and a trash roll a copy fits marks it trash in that list instead. A weapon's ammo type is its definition's, its season comes from the release its definition's traits name, and its drop source is where its collection entry says it drops. RPM is a copy's rounds per minute (swords, fusion rifles and bows have none), and its kills are the count of the tracker plugged into its tracker socket, read as DIM reads it: PvE, PvP or Gambit.
+
+**Reading it.** Nothing here is flagged: compare the copies and keep what you want; the first is the roll closest to what PvE players run. A perk's share is of its column's votes on that side, with its rank in the column (#1 the most picked; — for a perk players weren't seen with); when the copy lacks a column's favourite, it is named. A pair's share is of all the weapon's trait pairs. ★ marks a perk in a wishlist roll the copy completes, ☆ one a wishlist roll names that the copy doesn't complete. When a card's copies differ in element, rounds per minute, season or drop source, each copy names its own. "Trash in" names the lists that mark a copy's roll, or its whole weapon, as trash. "Missing wishlist entries" means no list has rolls for the weapon: judge it on popularity or light.gg (each card links its first copy's page). Low and very low confidence rest on a few copies: read those scores loosely.
+
+{% for card, copies in roll_copies|group('card') %}
+{% set first = copies[0] %}
+{% set covered = first.covered.split() %}
+{% set columns = grid_by_id.get(first.grid_id, [])|group('col') %}
+#### {{ card }} ({{ copies|length }} cop{% if copies|length == 1 %}y{% else %}ies{% endif %})
+
+{{ first.wtype }}{% if first.ammo %}, {{ first.ammo }} ammo{% endif %}{% if first.archetypes == 1 %}, {{ first.archetype }}{% endif %}{% if first.elements == 1 %}, {{ first.element }}{% endif %}{% if first.rpms == 1 and first.rpm %}, {{ first.rpm }} RPM{% endif %}{% if first.origins == 1 and first.season_name %}, {{ t.season(first) }}{% endif %}{% if first.origins == 1 and first.source %}, {{ first.source }}{% endif %}. DIM: `{{ copies|dim }}`. light.gg: https://www.light.gg/db/items/{{ first.item_hash }}/
+
+{% if first.pve_weapon_rank or first.pvp_weapon_rank %}Popularity: {% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) if first[side ~ '_weapon_rank'] %}{{ label }} #{{ first[side ~ '_weapon_rank'] }}, {{ first[side ~ '_confidence'] }} confidence{% if first[side ~ '_endgame'] %}, Endgame{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}.{% else %}Not scored by d2-perk-popularity.{% endif %} {% if covered %}Wishlists with rolls for it: {% for w in wishlists if w.key in covered %}{{ w.label }}{% if not loop.last %}, {% endif %}{% endfor %}.{% else %}Missing wishlist entries: no list has rolls for it.{% endif %}
+
+
+Copies, best PvE first:
+
+{% for c in copies %}
+{{ loop.index }}. `id:{{ c.instance_id }}`{% if c.name != c.family %} ({{ c.name }}){% endif %}: {% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) if c[side ~ '_score'] is not none %}{{ label }} {{ (c[side ~ '_score'] * 100)|round|int }}% (#{{ c[side ~ '_rank'] }}), {% endfor %}{% if c.elements > 1 %}{{ c.element }}, {% endif %}{% if c.rpms > 1 and c.rpm %}{{ c.rpm }} RPM, {% endif %}{% if c.origins > 1 and c.season_name %}{{ t.season(c) }}, {% endif %}{% if c.origins > 1 and c.source %}{{ c.source }}, {% endif %}gear tier {{ c.gear_tier or 'none' }}, {% if c.split %}wishlist rolls completed: {{ c.split }}{% elif covered %}no wishlist match{% else %}missing wishlist entries{% endif %}{% if c.trash %}, trash in {% for w in wishlists if w.key in c.trash.split() %}{{ w.label }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}{% if c.kills is not none %}, {{ t.kills(c) }}{% endif %}, {% if c.is_locked %}locked{% else %}not locked{% endif %}{% if c.tag %}, DIM tag {{ c.tag }}{% endif %}{% if c.notes %}, DIM notes "{{ c.notes }}"{% endif %}
+
+{% for col, cells in columns %}
+{% set perks = cells|selectattr('owners', 'naming', c.k)|list %}
+{% if perks %}
+   - {{ cells[0].label }}: {% for r in perks %}{{ r.perk }}{% if (' ' ~ c.k ~ ':') in ' ' ~ r.hits %} ★{% elif r.lists %} ☆{% endif %}{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) if r[side ~ '_rel'] is not none %}{% if loop.first %} ({% endif %}{{ label }} {{ r[side ~ '_share']|pct }}{% if r[side ~ '_rank'] %} #{{ r[side ~ '_rank'] }}{% endif %}{% if loop.last %}){% else %}, {% endif %}{% endfor %}{% if not loop.last %}, {% endif %}{% endfor %}{% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) %}{% set top = cells|selectattr(side ~ '_rank', 'equalto', 1)|first %}{% if top and top.owners is not naming(c.k) %}; {{ label }} favourite {{ top.perk }} {{ top[side ~ '_share']|pct }}{% endif %}{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% if c.pve_pair or c.pvp_pair %}
+   - Trait pair: {% for side, label in (('pve', 'PvE'), ('pvp', 'PvP')) if c[side ~ '_pair'] %}{% set top = top_pairs.get((side, c.entry), [])|first %}{{ label }} {{ c[side ~ '_pair'] }} {% if c[side ~ '_pair_rank'] %}{{ c[side ~ '_pair_share']|pct }} #{{ c[side ~ '_pair_rank'] }}{% else %}—{% endif %}{% if top and c[side ~ '_pair_rank'] != 1 %} (favourite {{ top.trait1 }} + {{ top.trait2 }} {{ top.share|pct }}){% endif %}{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+{% if popularity %}
+{% set sides = dict(popularity_sides|group('side')) %}
+{% set columns_by_weapon = dict(popular_columns|group('side', 'name')) %}
+{% set pairs_by_weapon = dict(popular_pairs|group('side', 'name')) %}
+## Popular
+
+**What this shows.** Every weapon d2-perk-popularity scores, PvE and PvP, in rank order: how many copies voted, how sure its scores are, whether hard content made it an Endgame pick, each perk column's most picked perk, and its three most picked trait pairs.
+
+**How it was derived.** d2-perk-popularity reads the post-game reports of finished activities and the perks on the weapons players used, one vote per copy, hard content counting for more; a family whose versions roll different trait pools is a weapon per pool, the pool in brackets after its name. A column's confidence comes from its effective votes (high from 100, medium from 30, low from 10, else very low), and a weapon's is its weakest column's, its origin traits aside: only some copies may have one. Endgame means at least {{ popularity_rule.endgame_copies }} of the weapon's copies on that side, and {{ (popularity_rule.endgame_share * 100)|round|int }}% of them, came from hard content: {{ sides.pve[0].hard }} for PvE; {{ sides.pvp[0].hard }} for PvP.{% if totals.scores_at %} Scores of {{ totals.scores_at|day }}.{% endif %}
+
+**Reading it.** Rank 1 is the side's most used weapon. A perk's share is of its column's votes, a pair's of all the weapon's pairs. Read low and very low confidence loosely: a few copies decide them. A fixed roll (most exotics) has no columns to pick from.
+
+{% for side, rows in popularity|group('side') %}
+### {{ sides[side][0].label }} ({{ '{:,}'.format(rows|length) }} weapons)
+
+| # | Weapon | Type | Copies | Confidence | Endgame | Most picked | Top pairs |
+|---:|---|---|---:|---|---|---|---|
+{% for w in rows %}
+| {{ w.rank }} | {{ w.name }} | {{ w.type }} | {{ '{:,}'.format(w.players) }} | {{ w.confidence or '—' }} | {% if w.endgame %}yes{% endif %} | {% for c in columns_by_weapon.get((side, w.name), []) if c.col != 'traits' %}{{ c.label }} {{ c.top }} {{ c.top_share|pct }}{% if not loop.last %} · {% endif %}{% endfor %} | {% for p in pairs_by_weapon.get((side, w.name), []) %}{{ p.trait1 }} + {{ p.trait2 }} {{ p.share|pct }}{% if not loop.last %} · {% endif %}{% endfor %} |
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+## Armor sets
+
+**What this shows.** Each class's Legendary armor sets, with every Armor 3.0 piece by slot in score order, and which to purge; then the legacy pieces, from before Armor 3.0.
+
+**How it was derived.** A piece's score is 3 × its set's first stat pick + 2 × the second + 1 × the third, on the best stats its own tuning socket (+5 to a stat it offers, -5 from another) and masterwork (+5 to each zero stat) can reach; a set without stat picks scores the stat total. Every gear tier competes on that score: a piece below Tier 5 has no tuning socket, so it scores on its own stats and masterwork. Each set keeps its grade's number of copies per slot ({% for g in grades %}{{ g.grade or g.label }} {{ g.slot_cap }}{% if not loop.last %}, {% endif %}{% endfor %}), best score first, ties to the older copy; the rest are purged unless a three-stat build needs them (see Builds). A piece with the same stats and tuning stats as an older copy of its set is an exact copy and is purged. Legacy pieces, from before Armor 3.0 (no gear tier, set bonus or tuning socket), are always purged. Grades, ranks and stat picks come from your armor preferences. Each set's bonuses are Bungie's, with their grade, rank and note on The Aegis's sheet where it has them.
+
+**Reading it.** Purge the pieces marked so; "Kept for" names the builds a piece past its cap stays for. Stats are base stats; "tunes" names the stats a piece's tuning socket can raise, and "adds" what the swap the score uses adds to it.
+
+{% for k in classes %}
+{% set pieces_k = sets_by_class.get(k.armor_class, []) %}
+{% set purged = pieces_k|selectattr('reason')|rejectattr('rescued')|list %}
+### {{ k.armor_class }}
+
+{{ purged|length }} to purge in the sets{% if purged %}. DIM: `{{ purged|dim }}`{% endif %}
+
+
+{% for set_name, pieces in pieces_k|group('set_name') %}
+{% set s = pieces[0] %}
+#### {{ set_name or 'No set' }}: grade {{ s.grade or '–' }} ({{ s.grade_label }}){% if s.rank %}, #{{ s.rank }} in the grade{% endif %}
+
+
+Preferred stats: {{ t.picks(s) }}. Keeps {{ s.slot_cap }} per slot: {{ s.copies - s.purge }} kept, {{ s.purge }} to purge.
+
+{% for b in set_bonuses.get(set_name, []) %}
+- {{ b.pieces }}-piece bonus, {{ b.name }}: {{ b.description.split()|join(' ') }} {% if b.aegis %}The Aegis: grade {{ b.aegis.grade }}, #{{ b.aegis.rank }}; {{ b.aegis.trigger }} → {{ b.aegis.effect }}; "{{ b.aegis.analysis }}"{% else %}Not on The Aegis's sheet.{% endif %}
+
+{% if loop.last %}
+
+{% endif %}
+{% endfor %}
+| Slot | Score | Stats | Tuning | Verdict |
+|---|---:|---|---|---|
+{% for p in pieces %}
+| {{ p.slot }} | {{ p.score|int }} | {{ t.stat_line(p) }} | {{ t.tuning(p) }} | {% if p.rescued %}Kept for {{ t.builds(p) }}{% elif p.reason == 'cap_tier' %}Purge: past the cap of {{ p.slot_cap }}{% elif p.reason == 'equal_same_set' %}Dupe: exact copy of `id:{{ p.keeper_id }}`, which stays{% else %}Kept{% endif %} |
+{% endfor %}
+
+{% else %}
+No Armor 3.0 Legendary armor.
+
+{% endfor %}
+{% set legacy_pieces = legacy_by_class.get(k.armor_class, []) %}
+{% if legacy_pieces %}
+#### Legacy ({{ legacy_pieces|length }})
+
+From before Armor 3.0, always purged. DIM: `{{ legacy_pieces|dim }}`
+
+| Piece | Slot | Set | Stats |
+|---|---|---|---|
+{% for p in legacy_pieces %}
+| {{ p.name }} | {{ p.slot }} | {{ p.set_name }} | {{ t.stat_line(p) }} |
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+## Builds
+
+**What this shows.** For each class, the three-stat builds the kept armor leaves short of 100, and the pieces kept past their set's cap so that a build reaches 100.
+
+**How it was derived.** For each of the 20 combinations of three of the six stats, the best kept Legendary piece in each slot, of any gear tier (the highest lowest-of-the-three, then the highest total, then the lowest itemInstanceId), adding up raw stats with no tuning or masterwork. Exotics are left out. A build is covered when each of its three stats totals at least 100. When the kept pieces leave a build short, a piece past its set's cap that takes it to 100 is kept: one piece when one is enough, else two from different slots; the better set wins first (grade, then rank), then the higher new lowest stat, then the score, then the lower itemInstanceId.
+
+**Reading it.** A short build lacks pieces strong in its stats: keep or farm pieces that are.
+
+{% for k in classes %}
+{% set short = short_by_class.get(k.armor_class, []) %}
+{% set kept = rescues_by_class.get(k.armor_class, []) %}
+### {{ k.armor_class }}: {{ k.covered }} of 20 builds covered
+
+{% if not k.covered %}
+No build reaches 100: the {{ k.armor_class }} has {{ k.legendary }} Legendary piece{% if k.legendary != 1 %}s{% endif %}, not enough to add up to 100 in three stats.
+
+{% elif short %}
+| Build | Totals | Short by |
+|---|---|---:|
+{% for b in short %}
+| {{ stat_names[b.stat_1] }} · {{ stat_names[b.stat_2] }} · {{ stat_names[b.stat_3] }} | {{ stat_names[b.stat_1] }} {{ b.total_1 }}, {{ stat_names[b.stat_2] }} {{ b.total_2 }}, {{ stat_names[b.stat_3] }} {{ b.total_3 }} | {{ 100 - b.low }} |
+{% endfor %}
+
+{% else %}
+No gaps: every three-stat build reaches 100.
+
+{% endif %}
+{% if kept %}
+Kept for builds:
+
+{% for build, pieces in kept|group('stat_1', 'stat_2', 'stat_3') %}
+- {% for stat in build %}{{ stat_names[stat] }}{% if not loop.last %} · {% endif %}{% endfor %}, lowest stat now {{ pieces[0].new_min }}: {% for p in pieces %}{{ p.name }} ({{ p.slot }}, {{ p.set_name }}{% if p.grade %}, grade {{ p.grade }}{% endif %}) `id:{{ p.instance_id }}`{% if not loop.last %}; {% endif %}{% endfor %}
+
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+## Exotics
+
+**What this shows.** For each class, how many of its exotic armor pieces you own, and each exotic with more than one copy, its copies in score order.
+
+**How it was derived.** Copies of one exotic, matched by name ignoring case (so a reissue competes with the old version), keep their single best copy on the exotic's own stat picks; an exotic class item keeps one copy per perk pair. The score uses the copy's stats with masterwork, untuned: a Tier 5 exotic can tune any stat, so tuning doesn't tell its copies apart. Ties go to the older copy (lower itemInstanceId).
+
+**Reading it.** Purge the copies marked so; the first copy of each exotic stays.
+
+{% for k in classes %}
+{% set dupes = dupes_by_class.get(k.armor_class, []) %}
+{% set purged = dupes|selectattr('reason')|list %}
+### {{ k.armor_class }}: you own {{ k.exotics_owned }} of the {{ k.exotics_total }} exotics, {{ purged|length }} to purge
+
+{% if purged %}
+DIM: `{{ purged|dim }}`
+
+{% for keeper, copies in dupes|group('keeper_id') %}
+{% set x = copies[0] %}
+#### {{ x.name }} ({{ x.slot }}{% if x.perks %}, {{ x.perks }}{% endif %})
+
+Preferred stats: {{ t.picks(x) }}.
+
+| Score | Stats | Verdict |
+|---:|---|---|
+{% for c in copies %}
+| {{ c.score|int }} | {{ t.stat_line(c) }} | {% if c.reason %}Purge `id:{{ c.instance_id }}`{% if c.tie %}: same score, the older copy stays{% endif %}{% else %}Kept{% endif %} |
+{% endfor %}
+
+{% endfor %}
+{% else %}
+No duplicates: one copy of each exotic.
+
+{% endif %}
+{% endfor %}
+## Preferences
+
+**What this shows.** Everything the app stores from you: your armor preferences (each armor set's preferred stats and grade, in rank order within the grade, then each exotic's preferred stats) and the wishlists weapon rolls are scored against.
+
+**How it was derived.** Read as stored in the armor_preference table. You set them in the preference editor (`d2-report --edit-armor-prefs`) or when a run asks about a new set or exotic; a set or exotic without an entry of yours gets the app's shipped default, added when the database opens. An exotic's class comes from the manifest. The wishlists are the app's defaults plus any you added with `d2-report --add-wishlist`, read from the wishlist_preference table.
+
+**Reading it.** These drive the armor pruning: a set's grade sets how many copies it keeps per slot ({% for g in grades %}{{ g.grade or g.label }} {{ g.slot_cap }}{% if not loop.last %}, {% endif %}{% endfor %}), its rank orders it within the grade (the order the sets are listed in; a build's rescue prefers the better set), and a piece scores 3 × its first preferred stat + 2 × the second + 1 × the third.
+
+### Armor stat preferences
+
+| Grade | Set | Preferred stats |
+|---|---|---|
+{% for p in set_preferences %}
+| {{ p.grade or 'Unclassified' }} | {{ p.name }} | {{ t.picks(p) }} |
+{% endfor %}
+
+### Exotics stat preferences
+
+| Class | Exotic | Preferred stats |
+|---|---|---|
+{% for p in exotic_preferences %}
+| {{ p.armor_class or 'Not in the manifest' }} | {{ p.name }} | {{ t.picks(p) }} |
+{% endfor %}
+
+### Wishlists
+
+| Wishlist | Key | URL |
+|---|---|---|
+{% for w in wishlists %}
+| {{ w.label }} | {{ w.key }} | {{ w.url }} |
+{% endfor %}
