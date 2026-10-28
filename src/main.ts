@@ -1,8 +1,14 @@
-// A placeholder until the report is ported: it loads the shared database,
-// logs the player in with Bungie, adds their profile, and says what's in it.
+// The site's page: it loads the shared database, logs the player in with
+// Bungie, adds their profile, runs the analysis and shows the report, all in
+// the browser.
+import '../templates/styles.css'
+import reportJs from '../templates/report.js?url'
+import { analyzeArmor, analyzeWeapons } from './analyze/analyze.ts'
 import { authenticate, getAccount, getProfile, startLogin } from './bungie.ts'
 import { loadDb } from './db.ts'
 import { PROFILE_COMPONENTS, ingestProfile } from './profile.ts'
+import { loadReport } from './report/load.ts'
+import { renderBody } from './report/render.ts'
 
 // The database's bytes from its gzipped file: unzipped here, unless the
 // server sent it with Content-Encoding: gzip and the browser already did
@@ -14,6 +20,11 @@ async function fetchDb(url: string): Promise<Uint8Array> {
   if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return bytes
   const unzipped = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
   return new Uint8Array(await new Response(unzipped).arrayBuffer())
+}
+
+// Let the browser paint the status line before the long work that follows.
+function paint(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve)))
 }
 
 const status = document.getElementById('status')!
@@ -34,10 +45,22 @@ try {
     status.textContent = 'Loading your inventory…'
     const account = await getAccount(tokens.access_token)
     ingestProfile(db, await getProfile(tokens.access_token, account, PROFILE_COMPONENTS))
-    const count = (view: string) => Number(db.selectValue(`SELECT count(*) FROM ${view}`)).toLocaleString()
-    status.textContent =
-      `${account.displayName}: ${count('v_weapon')} weapons and ${count('v_armor')} armor pieces loaded. ` +
-      'The report is coming soon.'
+    status.textContent = 'Building your report…'
+    await paint()
+    const started = performance.now()
+    // ponytail: the analysis and the report's queries hold the page's thread
+    // for a while (the queries take ~20 s in Node); move them to a Worker, or
+    // precompute the shared parts in the data build, if that's too slow.
+    analyzeWeapons(db)
+    analyzeArmor(db)
+    document.body.innerHTML = renderBody(loadReport(db), account.bungieName)
+    document.title = `${account.bungieName} · Destiny 2 Inventory Report`
+    // report.js runs the report's tabs, switches and grids; as a classic
+    // script it runs once, after the report's HTML is in.
+    const script = document.createElement('script')
+    script.src = reportJs
+    document.body.append(script)
+    console.info(`Report built in ${((performance.now() - started) / 1000).toFixed(1)} s`)
   }
 } catch (error) {
   status.textContent = `Something went wrong: ${error}`

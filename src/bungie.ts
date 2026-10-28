@@ -30,8 +30,9 @@ export type Tokens = {
 }
 
 // The account a report is for: a platform (1 Xbox, 2 PSN, 3 Steam…) and the
-// Destiny membership on it.
-export type Account = { membershipType: number; membershipId: string; displayName: string }
+// Destiny membership on it, with the player's name and their Bungie Name
+// (Name#1234), which the report's title shows as the CLI's did.
+export type Account = { membershipType: number; membershipId: string; displayName: string; bungieName: string }
 
 // Read from import.meta.env at each call, so tests can stub them.
 function credentials() {
@@ -157,10 +158,14 @@ export async function getAccount(token: string): Promise<Account> {
   const account =
     destinyMemberships.find((m: { membershipId: string }) => m.membershipId === primaryMembershipId) ??
     destinyMemberships[0]
+  const name = account.bungieGlobalDisplayName || account.displayName
+  // Bungie shows a name's code as four digits: Name#0042.
+  const code = account.bungieGlobalDisplayNameCode
   return {
     membershipType: account.membershipType,
     membershipId: account.membershipId,
-    displayName: account.bungieGlobalDisplayName || account.displayName,
+    displayName: name,
+    bungieName: code ? `${name}#${String(code).padStart(4, '0')}` : name,
   }
 }
 

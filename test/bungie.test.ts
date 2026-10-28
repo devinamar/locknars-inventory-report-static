@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import * as bungie from '../src/bungie.ts'
 
-const ACCOUNT = { membershipType: 3, membershipId: '4611686018400000001', displayName: 'Name' }
+const ACCOUNT = { membershipType: 3, membershipId: '4611686018400000001', displayName: 'Name', bungieName: 'Name#0042' }
 
 // A Storage kept in a Map, standing in for localStorage and sessionStorage.
 function memoryStorage(): Storage {
@@ -204,15 +204,27 @@ test('an HTTP error throws before the body is read', async () => {
 })
 
 test("the account is the Cross Save primary, else the player's only one", async () => {
+  // The Bungie Name's code shows as four digits.
+  const name = { bungieGlobalDisplayName: 'Name', bungieGlobalDisplayNameCode: 42 }
   const memberships = [
-    { membershipType: 1, membershipId: '1', displayName: 'Xbox', bungieGlobalDisplayName: 'Name' },
-    { membershipType: 3, membershipId: '3', displayName: 'Steam', bungieGlobalDisplayName: 'Name' },
+    { membershipType: 1, membershipId: '1', displayName: 'Xbox', ...name },
+    { membershipType: 3, membershipId: '3', displayName: 'Steam', ...name },
   ]
   serve(() => bungieReply({ destinyMemberships: memberships, primaryMembershipId: '3' }))
-  expect(await bungie.getAccount('access')).toEqual({ membershipType: 3, membershipId: '3', displayName: 'Name' })
+  expect(await bungie.getAccount('access')).toEqual({
+    membershipType: 3,
+    membershipId: '3',
+    displayName: 'Name',
+    bungieName: 'Name#0042',
+  })
   vi.restoreAllMocks()
   serve(() => bungieReply({ destinyMemberships: memberships.slice(0, 1) }))
-  expect(await bungie.getAccount('access')).toEqual({ membershipType: 1, membershipId: '1', displayName: 'Name' })
+  expect(await bungie.getAccount('access')).toEqual({
+    membershipType: 1,
+    membershipId: '1',
+    displayName: 'Name',
+    bungieName: 'Name#0042',
+  })
 })
 
 test('a Bungie.net account without Destiny 2 has no account to report on', async () => {
