@@ -30,11 +30,14 @@ jobs:
       - run: npm run check
       # The live Bungie app's credentials go into the page: its key only
       # works from the site's address, and Bungie sends logins only there.
+      # So does DIM's API key, registered for that address; without the
+      # secret, DIM's tags and notes are skipped.
       - run: npm run build
         env:
           VITE_BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
           VITE_BUNGIE_CLIENT_ID: ${{ secrets.BUNGIE_CLIENT_ID }}
           VITE_BUNGIE_CLIENT_SECRET: ${{ secrets.BUNGIE_CLIENT_SECRET }}
+          VITE_DIM_API_KEY: ${{ secrets.DIM_API_KEY }}
       - run: node build/data.ts dist
         env:
           BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}

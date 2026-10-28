@@ -7,6 +7,9 @@ export default defineConfig({
   // browser warns once).
   plugins: [basicSsl()],
   server: { port: 5173, strictPort: true },
+  // Two pages: the report, and the settings page that edits what it's built
+  // from.
+  build: { rolldownOptions: { input: ['index.html', 'settings.html'] } },
   // The report's worker is a module worker: sqlite-wasm and minijinja-js
   // start up with a top-level await, which a classic script can't hold.
   worker: { format: 'es' },

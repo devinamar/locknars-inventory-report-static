@@ -5,7 +5,8 @@
 // default lists and the browser a player's own with the same code, so nothing
 // here needs Node. A failed download throws: the data build starts from an
 // empty database with no stored copy to fall back on, so the build fails and
-// the last good deploy stays live.
+// the last good deploy stays live. A player's own list that fails is only
+// listed as failed (addWishlist), and their report still builds.
 //
 // File format, one entry per line:
 //   dimwishlist:item=<hash>&perks=<p1>,<p2>,...#notes:<text>  a recommended roll
@@ -49,25 +50,40 @@ export type ParsedRoll = {
   isTrash: boolean
 }
 
-// Save a wishlist source of the player's to wishlist_preference (the CLI's
-// --add-wishlist), its key made from label. Returns why it saved nothing, for
-// a URL that isn't http(s), a label without a letter or digit, or a key or URL
-// another source has; '' when it saved the source.
-export function addSource(db: Database, label: string, url: string): string {
-  const key = label
+// A wishlist source: its key, the name the report shows, and its file's URL.
+export type WishlistSource = { key: string; label: string; url: string }
+
+// The key a source's label makes: its letters and digits in lowercase, each
+// run of anything else one '_', none at the ends ('My List!' is my_list).
+export function sourceKey(label: string): string {
+  return label
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
-  const clash = db.selectValue('SELECT label FROM wishlist_preference WHERE key = ? OR url = ?', [key, url])
-  let problem = ''
-  if (!url.startsWith('https://') && !url.startsWith('http://')) {
-    problem = 'the URL must start with https:// or http://'
-  } else if (!key) {
-    problem = 'the label needs a letter or digit'
-  } else if (clash !== undefined) {
-    problem = `${clash} already has that name or URL`
-  } else {
-    db.exec('INSERT INTO wishlist_preference (key, label, url) VALUES (?, ?, ?)', { bind: [key, label, url] })
+}
+
+// Why a source of the player's can't join sources: a URL that isn't http(s),
+// a label without a letter or digit, or a key or URL one of sources has; ''
+// when it can. The settings page checks a new source with it, before any db.
+export function sourceProblem(sources: WishlistSource[], label: string, url: string): string {
+  const key = sourceKey(label)
+  const clash = sources.find((s) => s.key === key || s.url === url)
+  if (!url.startsWith('https://') && !url.startsWith('http://')) return 'the URL must start with https:// or http://'
+  if (!key) return 'the label needs a letter or digit'
+  if (clash) return `${clash.label} already has that name or URL`
+  return ''
+}
+
+// Save a wishlist source of the player's to wishlist_preference (the CLI's
+// --add-wishlist), its key made from label. Returns why it saved nothing (see
+// sourceProblem); '' when it saved the source.
+export function addSource(db: Database, label: string, url: string): string {
+  const sources = db.selectObjects('SELECT key, label, url FROM wishlist_preference ORDER BY rowid') as WishlistSource[]
+  const problem = sourceProblem(sources, label, url)
+  if (!problem) {
+    db.exec('INSERT INTO wishlist_preference (key, label, url) VALUES (?, ?, ?)', {
+      bind: [sourceKey(label), label, url],
+    })
   }
   return problem
 }
@@ -172,4 +188,23 @@ export async function extractWishlist(db: Database, key: string, label: string, 
 export async function extractWishlists(db: Database): Promise<void> {
   const sources = db.selectArrays('SELECT key, label, url FROM wishlist_preference ORDER BY rowid') as string[][]
   for (const [key, label, url] of sources) await extractWishlist(db, key, label, url)
+}
+
+// One of the player's own wishlists, which the browser adds to the shared
+// database's defaults and downloads on each build: '' once its rolls are
+// saved, else why not. One addSource refuses is left out. One whose download
+// fails doesn't fail the report: it's listed among the sources, with no
+// rolls, as 'failed', with the error as the status's detail.
+export async function addWishlist(db: Database, label: string, url: string): Promise<string> {
+  const problem = addSource(db, label, url)
+  if (problem) return problem
+  const key = sourceKey(label)
+  try {
+    await extractWishlist(db, key, label, url)
+    return ''
+  } catch (error) {
+    db.exec('INSERT OR IGNORE INTO wishlist_source (key, label, url) VALUES (?, ?, ?)', { bind: [key, label, url] })
+    saveSourceStatus(db, `wishlist:${key}`, 'failed', String(error))
+    return String(error)
+  }
 }

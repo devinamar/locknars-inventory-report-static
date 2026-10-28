@@ -2,13 +2,23 @@
 // d2-inventory-report's tests/sources/test_wishlists.py and
 // tests/extract/test_wishlists.py: parsing a wishlist file, where each roll
 // line becomes one ParsedRoll, in file order, with the notes and tags that
-// apply to it; adding a source; what save writes to wishlist_roll; and
-// downloading each source every run. The download is a stand-in.
+// apply to it; adding a source; what save writes to wishlist_roll;
+// downloading each source every run; and a player's own lists, which the
+// browser adds and downloads on each build. The download is a stand-in.
 import { createHash } from 'node:crypto'
 import { type Database } from '@sqlite.org/sqlite-wasm'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { insertMany } from '../src/db.ts'
-import { WILDCARD_ITEM_HASH, addSource, extractWishlists, parseWishlistText, save } from '../src/wishlists.ts'
+import { SOURCES } from '../src/report/load.ts'
+import {
+  WILDCARD_ITEM_HASH,
+  addSource,
+  addWishlist,
+  extractWishlists,
+  parseWishlistText,
+  save,
+  sourceProblem,
+} from '../src/wishlists.ts'
 import * as c from './helpers.ts'
 
 const PLUGS: [number, string, string, string][] = [
@@ -192,6 +202,15 @@ test('addSource refuses a bad URL or label, or a taken one', () => {
   expect(db.selectValue('SELECT COUNT(*) FROM wishlist_preference')).toBe(count)
 })
 
+test('the settings page checks a source by the same rules, without a db', () => {
+  // Against the sources it knows of: the defaults and the player's.
+  const sources = [{ key: 'voltron', label: 'Voltron', url: 'https://example.com/voltron.txt' }]
+  expect(sourceProblem(sources, 'My List!', 'https://example.com/list.txt')).toBe('')
+  expect(sourceProblem(sources, 'VOLTRON', 'https://example.com/b.txt')).toBe('Voltron already has that name or URL')
+  expect(sourceProblem(sources, '!!!', 'https://example.com/b.txt')).toBe('the label needs a letter or digit')
+  expect(sourceProblem([], 'Mine', 'javascript:alert(1)')).toBe('the URL must start with https:// or http://')
+})
+
 // Saving
 
 function ingest(text: string): void {
@@ -325,4 +344,49 @@ test.each([
   expect(db.selectValue('SELECT COUNT(*) FROM wishlist_roll')).toBe(0)
   expect(db.selectValue('SELECT COUNT(*) FROM wishlist_source')).toBe(0)
   expect(status()).toBeUndefined()
+})
+
+// A player's own lists: added beside the defaults and downloaded on each
+// build; one that fails is listed, and the report still builds.
+
+// source_status's [status, detail] for the source with key.
+function statusOf(key: string) {
+  return db.selectArray('SELECT status, detail FROM source_status WHERE source = ?', [`wishlist:${key}`])
+}
+
+test("a player's list is added after the defaults, and its rolls saved fresh", async () => {
+  serve('dimwishlist:item=100&perks=1,4')
+  expect(await addWishlist(db, 'My List', LIST_URL)).toBe('')
+  expect(db.selectArrays('SELECT key, label, url FROM wishlist_preference ORDER BY rowid').at(-1)).toEqual([
+    'my_list',
+    'My List',
+    LIST_URL,
+  ])
+  expect(db.selectArrays("SELECT item_hash, perk1, perk2 FROM wishlist_roll WHERE source_key = 'my_list'")).toEqual([
+    [100, 1, 4],
+  ])
+  expect(statusOf('my_list')).toEqual(['fresh', ''])
+})
+
+test.each([
+  ['unreachable', new TypeError('Failed to fetch'), 'TypeError: Failed to fetch'],
+  ['an error status', new Response('Not Found', { status: 404 }), `Error: ${LIST_URL}: HTTP 404`],
+])("a player's list that fails to download is listed as failed: %s", async (_, failure, reason) => {
+  // With why as the status's detail, and in the report's data sources, with
+  // no rolls; the build goes on.
+  serve(failure)
+  expect(await addWishlist(db, 'My List', LIST_URL)).toBe(reason)
+  expect(statusOf('my_list')).toEqual(['failed', reason])
+  expect(db.selectValue("SELECT COUNT(*) FROM wishlist_roll WHERE source_key = 'my_list'")).toBe(0)
+  const listed = db.selectObjects(SOURCES).find((s) => s.name === 'My List')
+  expect([listed?.ok, listed?.status]).toEqual([0, 'Download failed, and no copy is stored'])
+})
+
+test("a player's list addSource refuses is left out, and not downloaded", async () => {
+  // Its label makes the key of a default: the default keeps its status.
+  const label = db.selectValue("SELECT label FROM wishlist_preference WHERE key = 'voltron'")
+  const asked = serve('dimwishlist:item=100&perks=1')
+  expect(await addWishlist(db, 'Voltron', LIST_URL)).toBe(`${label} already has that name or URL`)
+  expect(asked).toEqual([])
+  expect(statusOf('voltron')).toBeUndefined()
 })

@@ -1,8 +1,10 @@
 // The last report, kept in the browser's IndexedDB between visits, as DIM
 // keeps its last profile: shown at once on the next visit, then rebuilt only
-// when Bungie's profile or the shared data changed. Storage can be blocked
-// (some private windows) or cleared: then nothing is kept, and every visit
-// builds the report.
+// when Bungie's profile, the shared data, the player's settings (their
+// preferences and own wishlists, src/saved.ts) or their DIM tags changed.
+// Storage can be blocked (some private windows) or cleared: then nothing is
+// kept, and every visit builds the report.
+import type { DimSync } from './dim.ts'
 
 // What a report was built from, and its HTML.
 export type CachedReport = {
@@ -15,7 +17,33 @@ export type CachedReport = {
   profileMinted: string
   // version.json's built_at: when the data build made the shared database.
   dataBuilt: string
+  // The player's settings it was built with, as JSON.
+  settings: string
+  // What DIM said for it (dimKey).
+  dim: string
   html: string
+}
+
+// What DIM said, as the report's cache keeps it: the tags and notes with the
+// copies in a fixed order, so a changed tag or note rebuilds the report; or
+// only 'skipped' or 'failed', so a failing DIM doesn't rebuild it at every
+// visit, and DIM answering again does.
+export function dimKey(dim: DimSync): string {
+  if (dim.status !== 'fresh') return dim.status
+  return JSON.stringify(Object.entries(dim.annotations).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+}
+
+// Whether cached was built from what report is: the same Destiny account,
+// Bungie profile, shared data and settings. A report kept before settings
+// were kept with it isn't.
+export function upToDate(cached: CachedReport | undefined, report: CachedReport): boolean {
+  return (
+    cached?.membershipId === report.membershipId &&
+    cached.profileMinted === report.profileMinted &&
+    cached.dataBuilt === report.dataBuilt &&
+    cached.settings === report.settings &&
+    cached.dim === report.dim
+  )
 }
 
 const KEY = 'report'
