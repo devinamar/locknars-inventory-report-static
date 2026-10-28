@@ -1,0 +1,7 @@
+// The site on Cloudflare: Vite's build (dist/) served as static assets at
+// https://d2-report.locknar.workers.dev.
+{
+  "name": "d2-report",
+  "compatibility_date": "2026-10-27",
+  "assets": { "directory": "./dist" }
+}
