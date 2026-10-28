@@ -153,8 +153,6 @@ export function setup(builtWith: string, rebuild: () => void, markdown?: string,
       const picks = [pref.stat1, pref.stat2, pref.stat3]
       rows.get(name)!.querySelectorAll<HTMLSelectElement>('.pick').forEach((select, i) => {
         select.value = picks[i] ?? ''
-        select.disabled = i > 0 && !picks[i - 1]
-        for (const option of select.options) option.disabled = picks.slice(0, i).includes(option.value)
       })
     }
     const setRows = shown.filter(([, pref]) => !pref.isExotic)

@@ -396,6 +396,27 @@ tbody th { font-weight: 600; color: var(--ink-hi); }
    stays on it. */
 .move[aria-disabled="true"] { border-color: var(--line); background: none; color: var(--line-hi); cursor: default; }
 #page-preferences :is(select, button, input):focus-visible { outline: 2.5px solid var(--keep); outline-offset: 2.5px; }
+/* A stat dropdown shows its stats' icons, in its menu and its choice, where
+   the browser draws a select's options as HTML (customizable select);
+   elsewhere it's a plain select of names. */
+#page-preferences .pick, #page-preferences .pick::picker(select) { appearance: base-select; }
+#page-preferences .pick { display: inline-flex; align-items: center; gap: 10px; min-width: 175px; }
+#page-preferences .pick::picker-icon { margin-inline-start: auto; color: var(--muted); }
+#page-preferences .pick::picker(select) { margin-top: 5px; padding: 5px; border: 1px solid var(--line-hi); border-radius: 7.5px; background: var(--tile); color: var(--ink); box-shadow: 0 7.5px 22.5px #000a; }
+#page-preferences .pick option { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12.5px; border-radius: 5px; }
+#page-preferences .pick option:is(:hover, :focus-visible) { background: var(--keep-fill); outline: none; }
+#page-preferences .pick option:checked { color: var(--keep); }
+#page-preferences .pick selectedcontent { display: inline-flex; align-items: center; gap: 10px; }
+#page-preferences .pick img { opacity: 0.85; }
+/* The armor note: its parts, the scoring formula and the grades' caps. */
+.fold-note p { margin: 0 0 12.5px; }
+.fold-note > :last-child { margin-bottom: 0; }
+.formula { width: fit-content; padding: 7.5px 17.5px; border-radius: 7.5px; background: var(--tile); font: 500 18.75px var(--mono); color: var(--ink-hi); }
+.grade-caps { width: auto; margin: 0 0 12.5px; }
+.grade-caps :is(th, td) { padding: 5px 17.5px; border: 1px solid var(--line); }
+.grade-caps th { font-weight: 500; color: var(--muted); }
+.grade-caps td:first-child { font: 700 21.25px var(--head); color: var(--ink-hi); }
+.grade-caps td.num { text-align: center; }
 .pref-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 15px 20px; padding: 20px 25px 25px; border-top: 1px solid var(--line); }
 /* A form's paragraph on a line of its own, no wider than 1125px: what the
    line has left over is its margin. */
@@ -420,6 +441,9 @@ tbody th { font-weight: 600; color: var(--ink-hi); }
     .prefs:not(.lists) tbody :is(th, td:has(.place)) { grid-column: 1 / -1; }
     .prefs:not(.lists) tbody th { order: -1; }
     .prefs:not(.lists) .pick { width: 100%; }
+    /* Three to a row, a stat dropdown shows its choice by icon alone. */
+    #page-preferences .pick { min-width: 0; padding: 0 10px; }
+    #page-preferences .pick selectedcontent:has(img) { font-size: 0; }
 }
 
 /* Perk tooltip: one element, filled from the hidden tip-<plug hash> blocks */

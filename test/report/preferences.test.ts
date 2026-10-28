@@ -65,33 +65,42 @@ test("each set's row holds its grade, stat picks and moves, by grade and rank", 
   c.addPreference(db, 'Test Set', 'F', 1, ['health'])
   const page = reportPage(renderReport(db)[0], 'preferences')
   expect(names(page)).toEqual(['Test Set', 'Late Set', 'Loose Set'])
-  // A pick is None, or a stat no earlier pick has; the 3rd is off while the
-  // 2nd is None.
+  // Nothing is off: any stat can be picked in any place, even after a None
+  // (the store swaps a stat another pick has, and moves a pick after a None
+  // up: withPick).
   expect(dropdowns(row(page, 'Test Set'))).toEqual([
     { label: 'Test Set: grade', value: 'F', off: false, taken: [] },
     { label: 'Test Set: 1st stat', value: 'health', off: false, taken: [] },
-    { label: 'Test Set: 2nd stat', value: '', off: false, taken: ['health'] },
-    { label: 'Test Set: 3rd stat', value: '', off: true, taken: ['health'] },
+    { label: 'Test Set: 2nd stat', value: '', off: false, taken: [] },
+    { label: 'Test Set: 3rd stat', value: '', off: false, taken: [] },
   ])
   expect(dropdowns(row(page, 'Late Set')).slice(1)).toEqual([
     { label: 'Late Set: 1st stat', value: 'melee', off: false, taken: [] },
-    { label: 'Late Set: 2nd stat', value: 'grenade', off: false, taken: ['melee'] },
-    { label: 'Late Set: 3rd stat', value: 'health', off: false, taken: ['melee', 'grenade'] },
+    { label: 'Late Set: 2nd stat', value: 'grenade', off: false, taken: [] },
+    { label: 'Late Set: 3rd stat', value: 'health', off: false, taken: [] },
   ])
-  // The grades S to F, as the CLI's editor offered them; an unclassified
-  // set shows Unclassified, which can't be chosen, and no stat picks.
+  // Each stat's option has its icon, and the dropdown's button shows the
+  // choice as its option does (customizable select).
   expect(row(page, 'Test Set')).toContain(
-    '<option value="S">S · Best-in-class</option><option value="A">A · Excellent</option>' +
-      '<option value="B">B · Good</option><option value="C">C · Situational</option>' +
-      '<option value="D">D · Weak</option><option value="E">E · Marginal</option>' +
-      '<option value="F" selected>F · No PvE value</option></select>',
+    '<select class="pick" data-pick="0" aria-label="Test Set: 1st stat"><button><selectedcontent>' +
+      '</selectedcontent></button><option value="">None</option>',
+  )
+  expect(row(page, 'Test Set')).toContain(
+    '<option value="health" selected><img src="https://www.bungie.net/img/health.png" alt="" width="20" ' +
+      'height="20">health</option>',
+  )
+  // The grades S to F, by letter; an unclassified set shows Unclassified,
+  // which can't be chosen, and no stat picks.
+  expect(row(page, 'Test Set')).toContain(
+    '<option value="S">S</option><option value="A">A</option><option value="B">B</option><option value="C">C</option>' +
+      '<option value="D">D</option><option value="E">E</option><option value="F" selected>F</option></select>',
   )
   expect(row(page, 'Loose Set')).toContain('<option value="" selected disabled>Unclassified</option>')
   expect(dropdowns(row(page, 'Loose Set')).map((d) => [d.value, d.off])).toEqual([
     ['', false],
     ['', false],
-    ['', true],
-    ['', true],
+    ['', false],
+    ['', false],
   ])
   // A move past its grade's end is off: Test Set is first in F, Late Set
   // last, Loose Set alone.
@@ -124,13 +133,13 @@ test("each exotic's row holds its stat picks, by class", () => {
   )
   expect(dropdowns(row(page, 'Test Exotic Helm'))).toEqual([
     { label: 'Test Exotic Helm: 1st stat', value: 'weapons', off: false, taken: [] },
-    { label: 'Test Exotic Helm: 2nd stat', value: 'melee', off: false, taken: ['weapons'] },
-    { label: 'Test Exotic Helm: 3rd stat', value: '', off: false, taken: ['melee', 'weapons'] },
+    { label: 'Test Exotic Helm: 2nd stat', value: 'melee', off: false, taken: [] },
+    { label: 'Test Exotic Helm: 3rd stat', value: '', off: false, taken: [] },
   ])
   expect(dropdowns(row(page, 'Unknown Exotic')).map((d) => [d.value, d.off])).toEqual([
     ['', false],
-    ['', true],
-    ['', true],
+    ['', false],
+    ['', false],
   ])
   expect(row(page, 'Test Exotic Helm')).not.toContain('class="move"')
   db.close()
@@ -157,8 +166,14 @@ test("the player's own wishlists have a Remove, the defaults none", () => {
 test('the tab adds a wishlist, backs up, resets and offers the rebuild, every control labelled', () => {
   const db = c.testDb()
   const page = reportPage(renderReport(db)[0], 'preferences')
-  // The stat dropdowns' order is the stats' priority.
-  expect(page).toContain("A set's stats in priority order, left to right: each piece scores 3 × its 1st stat")
+  // The armor note: the stat order's math, with an example, and each grade's
+  // cap, from the grades.
+  expect(page).toContain('<p class="formula">score = 3 × 1st stat + 2 × 2nd stat + 1 × 3rd stat</p>')
+  expect(page).toContain('= <b>140</b> with Health picked 1st, but 3 × 20 + 2 × 30 + 1 × 10 = <b>130</b> with Weapons 1st.')
+  expect(page).toContain(
+    '<tr><th scope="col">Grade</th><th scope="col">Keeps</th></tr>\n<tr><td>S</td><td class="num">4</td></tr>\n' +
+      '<tr><td>A, B</td><td class="num">2</td></tr>\n<tr><td>C, D, E, F, Unclassified</td><td class="num">1</td></tr>',
+  )
   expect(page).toContain('<label>Name <input name="label" required autocomplete="off"></label>')
   expect(page).toContain(
     '<label>URL of its .txt file <input name="url" type="url" required autocomplete="off"></label>',
@@ -171,8 +186,8 @@ test('the tab adds a wishlist, backs up, resets and offers the rebuild, every co
   // Beside them, the report itself as Markdown (src/preferences-tab.ts hides
   // both parts for a report kept without its copy).
   expect(page).toContain(
-    '<p class="markdown">The report itself can be saved as Markdown, the copy the CLI also wrote for reading ' +
-      'it with an LLM.</p>\n<button type="button" class="act markdown">Export the report as Markdown</button>',
+    '<p class="markdown">You can also download the report itself as a Markdown file.</p>\n' +
+      '<button type="button" class="act markdown">Export the report as Markdown</button>',
   )
   expect(page).toContain('<button type="button" class="act purge reset">Reset armor preferences to defaults</button>')
   // The bar's status, empty until a change, and its rebuild, hidden until
