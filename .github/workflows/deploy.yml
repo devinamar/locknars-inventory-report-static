@@ -1,9 +1,13 @@
-# Test, build and deploy the site to Cloudflare on every push to main.
+# Test, build and deploy the site to Cloudflare on every push to main, and
+# every 6 hours for its data: a new manifest, wishlist updates, and the perk
+# scores published on Mondays.
 name: Deploy
 
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -25,6 +29,9 @@ jobs:
       - run: npm test
       - run: npm run check
       - run: npm run build
+      - run: node build/data.ts dist
+        env:
+          BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
       - uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
