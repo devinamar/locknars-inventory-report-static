@@ -7,8 +7,8 @@
 // once (src/saved.ts), as a change to what's saved, by the CLI's rules as
 // ported (src/analyze/prefs/store.ts, src/preferences.ts, src/wishlists.ts),
 // and the controls are drawn again from what's saved. The rest of the report
-// still shows the preferences it was built with until the page is reloaded,
-// which rebuilds it (src/main.ts); the bar at the tab's end says so.
+// still shows the preferences it was built with until it's rebuilt: the bar
+// at the tab's end says so, and its button has the page rebuild it.
 import { gradeMembers, insertIntoGrade, type Prefs, sortedPrefs } from './analyze/prefs/store.ts'
 import { parseBackup, toPrefs, toRows, withPick } from './preferences.ts'
 import { keepSaved, loadSaved, type Saved } from './saved.ts'
@@ -112,8 +112,10 @@ function listRow({ key, label, url }: WishlistSource): HTMLTableRowElement {
 // Make the tab's controls work, for a report built with the settings
 // builtWith (as JSON: CachedReport's settings), whose Markdown copy is
 // markdown (none for a report kept from before there was one), for the player
-// bungieName (Name#1234).
-export function setup(builtWith: string, markdown?: string, bungieName = ''): void {
+// bungieName (Name#1234). The bar's button calls rebuild: the page asks
+// Bungie again, and rebuilds the report with the settings saved
+// (src/main.ts).
+export function setup(builtWith: string, rebuild: () => void, markdown?: string, bungieName = ''): void {
   const tab = document.getElementById('page-preferences')
   // A report kept from before the tab had controls has none to set up.
   if (!tab?.querySelector('.pref-bar')) return
@@ -273,8 +275,7 @@ export function setup(builtWith: string, markdown?: string, bungieName = ''): vo
     keep(resetArmor(loadSaved()), 'Your armor preferences are back to the defaults.')
   })
 
-  // The page loaded again rebuilds the report with what's saved.
-  $('.rebuild').addEventListener('click', () => location.reload())
+  $('.rebuild').addEventListener('click', rebuild)
 
   // The tab as saved, which a report built before the last change doesn't
   // show; when it shows armor preferences that aren't saved, why.

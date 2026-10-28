@@ -7,6 +7,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
+import { type Database } from '@sqlite.org/sqlite-wasm'
+import { sha256 } from '../src/cache.ts'
 import { exportDb } from '../src/db.ts'
 import { extractWishlists } from '../src/wishlists.ts'
 import { extractAegis } from './aegis.ts'
@@ -17,6 +19,18 @@ import { extractPerkScores } from './perk-scores.ts'
 
 // Cloudflare serves no file over 25 MiB.
 const MAX_BYTES = 25 * 1024 * 1024
+
+// What went into the database, as a SHA-256: each source's version, as its
+// status's detail records it (the manifest's version, Clarity's, the perk
+// scores' generated_at, the Aegis sheet's SHA-256), and each wishlist's
+// content_hash; not when they were checked, nor when the build ran. A
+// player's kept report is keyed on it (src/cache.ts), so a scheduled build
+// that finds every source as it was keeps the reports built from the last.
+export function dataVersion(db: Database): Promise<string> {
+  const sources = db.selectArrays('SELECT source, detail FROM source_status ORDER BY source')
+  const wishlists = db.selectArrays('SELECT key, content_hash FROM wishlist_source ORDER BY key')
+  return sha256(JSON.stringify({ sources, wishlists }))
+}
 
 export async function buildData(outDir: string, apiKey = ''): Promise<void> {
   const db = createDb()
@@ -36,10 +50,11 @@ export async function buildData(outDir: string, apiKey = ''): Promise<void> {
     throw new Error(`static.db.gz is ${gz.byteLength} bytes, over Cloudflare's 25 MiB a file`)
   }
   const sources = Object.fromEntries(db.selectArrays('SELECT source, detail FROM source_status ORDER BY source'))
+  const version = { built_at: new Date().toISOString(), data_version: await dataVersion(db), sources }
   db.close()
   mkdirSync(outDir, { recursive: true })
   writeFileSync(join(outDir, 'static.db.gz'), gz)
-  writeFileSync(join(outDir, 'version.json'), `${JSON.stringify({ built_at: new Date().toISOString(), sources }, null, 2)}\n`)
+  writeFileSync(join(outDir, 'version.json'), `${JSON.stringify(version, null, 2)}\n`)
   console.log(`static.db.gz: ${(gz.byteLength / 1e6).toFixed(1)} MB`)
 }
 

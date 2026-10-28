@@ -1,10 +1,12 @@
 // The Aegis's endgame analysis spreadsheet ranks every armor set bonus, S to F;
 // the app keeps the rankings for reference beside the armor preferences, in
 // the aegis_bonus table. The data build fetches the "Set Bonuses" tab as CSV
-// through Google Sheets' public export and saves each ranked row.
+// through Google Sheets' public export and saves each ranked row. The sheet
+// has no version of its own: the CSV's SHA-256 stands for one.
 // Sheet: https://docs.google.com/spreadsheets/d/1JM-0SlxVDAi-C6rGVlLxa-J1WGewEeL8Qvq4htWZHhY/
 // Video: https://www.youtube.com/watch?v=4yRRkyEa6Ic
 import { type Database } from '@sqlite.org/sqlite-wasm'
+import { sha256 } from '../src/cache.ts'
 import { insertMany } from '../src/db.ts'
 import { get } from '../src/http.ts'
 import { saveSourceStatus } from '../src/source-status.ts'
@@ -142,11 +144,13 @@ export function saveBonuses(db: Database, bonuses: AegisBonus[]): void {
   )
 }
 
-// Download and save the rankings. Throws, saving nothing, when the download
-// fails or the sheet holds no ranked bonus.
+// Download and save the rankings, with the CSV's SHA-256 as the detail.
+// Throws, saving nothing, when the download fails or the sheet holds no
+// ranked bonus.
 export async function extractAegis(db: Database): Promise<void> {
-  const bonuses = parseCsv(await (await get(CSV_URL)).text())
+  const text = await (await get(CSV_URL)).text()
+  const bonuses = parseCsv(text)
   if (!bonuses.length) throw new Error("The Aegis's set-bonus sheet parsed empty")
   saveBonuses(db, bonuses)
-  saveSourceStatus(db, 'aegis', 'fresh')
+  saveSourceStatus(db, 'aegis', 'fresh', await sha256(text))
 }

@@ -19,6 +19,7 @@
 //   description:<text>   section description (not stored)
 //   ...|tags:<a,b c>     tags at the end of any note, split on comma or space
 import { type Database } from '@sqlite.org/sqlite-wasm'
+import { sha256 } from './cache.ts'
 import { insertMany } from './db.ts'
 import { get } from './http.ts'
 import { WILDCARD_ITEM_HASH } from './models.ts'
@@ -168,12 +169,6 @@ export function save(
       return [key, r.itemHash, noteIds.get(r.notes) ?? null, [...r.tags].sort().join(','), r.isTrash, ...slots]
     }),
   )
-}
-
-// SHA-256 of text as UTF-8, in hex.
-async function sha256(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 // Download one source, replace its rolls and record it fresh.

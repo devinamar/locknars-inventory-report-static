@@ -11,17 +11,32 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;800&display=swap"
     />
-    <!-- The boot log, and the panel it moves to over a report from the cache. -->
+    <!-- The boot log, and over a report the refresh widget it moves into
+         (src/refresh.ts), in the report's colours: ↻, the status and the log's
+         toggle in the corner, the log opening above them. -->
     <style>
       #boot { max-width: 55rem; margin: 3.75rem auto; padding: 0 1.25rem; }
       .boot-log { list-style: none; padding: 0; font: 16.25px/1.7 'JetBrains Mono', monospace; }
-      .boot-panel {
-        position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1000; max-width: 35rem;
-        padding: 0.625rem 1.125rem; border-radius: 7.5px; background: #1c1f24; color: #e6e6e6;
-        box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+      .refresh {
+        position: fixed; right: 16px; bottom: 16px; z-index: 1000;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        max-width: min(35rem, calc(100vw - 32px)); padding: 8px 10px;
+        border: 1px solid var(--keep-line); border-radius: 12.5px; background: var(--card);
+        box-shadow: 0 7.5px 22.5px #000a; font: 15px/1.35 var(--mono); overflow-wrap: anywhere;
       }
-      .boot-panel .boot-log { margin: 0; }
-      .boot-panel button { margin: 0.3rem 0 0.2rem; }
+      .refresh-status { flex: 1 1 12rem; margin: 0; }
+      .refresh .act { min-height: 40px; padding: 0 12px; font-size: 15px; }
+      .refresh .act:focus-visible { outline: 2.5px solid var(--keep); outline-offset: 2.5px; }
+      .refresh .act span { display: inline-block; }
+      .refresh-now span { font-size: 20px; line-height: 1; }
+      .refresh-now[aria-disabled="true"] { cursor: progress; }
+      .refresh.busy .refresh-now span { animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(1turn); } }
+      @media (prefers-reduced-motion: reduce) { .refresh.busy .refresh-now span { animation: none; } }
+      .refresh-log[aria-expanded="true"] span { transform: rotate(180deg); }
+      .refresh .boot-log { order: -1; flex: 1 0 100%; max-height: 40vh; overflow: auto; margin: 0; font-size: 13.75px; }
+      /* The Preferences tab's bar stays clear of the widget. */
+      body:has(> .refresh) .pref-bar { bottom: 90px; }
     </style>
     <script type="module" src="/src/main.ts"></script>
   </head>

@@ -9,4 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_BUNGIE_CLIENT_ID: string
   readonly VITE_BUNGIE_CLIENT_SECRET: string
   readonly VITE_DIM_API_KEY?: string
+  // The commit the deploy builds, which a kept report is keyed on; none
+  // locally.
+  readonly VITE_COMMIT?: string
 }
