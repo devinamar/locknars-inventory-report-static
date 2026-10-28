@@ -231,15 +231,39 @@ LEFT JOIN tracker ON tracker.instance_id = copy.instance_id
 ORDER BY copy.slot_order, copy.wtype, copy.card, pop.pve_rank
 `
 
+// The elements of the copies on Roll Quality's cards (v_weapon's: a copy's
+// damage type, else its weapon's default), with their icons, in the game's
+// order (n, the damage type's enum value: Kinetic 1 to Strand 7): the weapons
+// page's Element switch.
+export const WEAPON_ELEMENTS = `
+SELECT DISTINCT v.element, v.element_icon, t.enumValue AS n
+FROM v_weapon_card c
+JOIN v_weapon v ON v.instance_id = c.instance_id
+LEFT JOIN DestinyDamageTypeDefinition t ON t.name = v.element
+ORDER BY n, v.element
+`
+
 // Popular, and the perk grids it and the weapons page open.
+
+// Each scored weapon's elements: its versions' (v_popularity_version) default
+// damage types (v_weapon_definition), more than one where a reissue changed
+// it, each with its icon and its place in the game's order (n, as in
+// WEAPON_ELEMENTS).
+export const POPULAR_ELEMENTS = `
+SELECT DISTINCT v.name, d.element, d.element_icon, t.enumValue AS n
+FROM v_popularity_version v
+JOIN v_weapon_definition d ON d.item_hash = v.item_hash
+LEFT JOIN DestinyDamageTypeDefinition t ON t.name = d.element
+`
 
 // Every weapon d2-perk-popularity scores, per side in rank order, as the Popular
 // page lists it: its popularity there (v_popularity_weapon), its representative
 // version's looks (v_weapon_definition: icon, slot, ammo, season and source),
-// its Endgame badge on each side, how many vault copies its versions have,
-// card (1 when Roll Quality has a card for it: a copy left after pruning), and
-// top_perks, each scored column's most picked perk (its v_perk plug hash) in
-// socket order, space-separated.
+// element, every element its versions come in (POPULAR_ELEMENTS) in the game's
+// order, space-separated, its Endgame badge on each side, how many vault copies
+// its versions have, card (1 when Roll Quality has a card for it: a copy left
+// after pruning), and top_perks, each scored column's most picked perk (its
+// v_perk plug hash) in socket order, space-separated.
 export const POPULARITY = `
 WITH owned AS (
     SELECT v.name, COUNT(*) AS owned
@@ -262,13 +286,20 @@ top AS (
     JOIN v_perk k ON k.perk = p.perk
     WHERE p.rank = 1
     GROUP BY p.side, p.name
+),
+element AS (
+    SELECT name, group_concat(element, ' ' ORDER BY n) AS element
+    FROM (${POPULAR_ELEMENTS})
+    GROUP BY name
 )
 SELECT w.*, d.icon, d.watermark, d.slot, d.slot_order, d.ammo, d.ammo_icon, d.season_num,
-       d.season_name, d.source, COALESCE(o.owned, 0) AS owned, c.grid_id IS NOT NULL AS card,
+       d.season_name, d.source, COALESCE(el.element, '') AS element,
+       COALESCE(o.owned, 0) AS owned, c.grid_id IS NOT NULL AS card,
        COALESCE(e.pve_endgame, 0) AS pve_endgame, COALESCE(e.pvp_endgame, 0) AS pvp_endgame,
        COALESCE(t.top_perks, '') AS top_perks
 FROM v_popularity_weapon w
 LEFT JOIN v_weapon_definition d ON d.item_hash = w.item_hash
+LEFT JOIN element el ON el.name = w.name
 LEFT JOIN owned o ON o.name = w.name
 LEFT JOIN card c ON c.grid_id = w.grid_id
 JOIN endgame e ON e.name = w.name
@@ -410,7 +441,9 @@ ORDER BY p.grid_id, pve_rank IS NULL, pve_rank, pvp_rank IS NULL, pvp_rank, p.tr
 `
 
 // The choices of the Popular page's filters: each weapon type, slot (in bucket
-// order) and ammo type among the scored weapons, with the ammo badges.
+// order), ammo type and element (in the game's order) among the scored weapons,
+// with the ammo and element badges. A weapon's elements are all its versions'
+// (POPULAR_ELEMENTS), as its row gives them.
 export const POPULAR_OPTIONS = `
 SELECT DISTINCT 'ammo' AS kind, d.ammo AS value,
        upper(substr(d.ammo, 1, 1)) || substr(d.ammo, 2) AS label, d.ammo_icon AS icon,
@@ -418,6 +451,9 @@ SELECT DISTINCT 'ammo' AS kind, d.ammo AS value,
 FROM v_popularity_weapon w
 JOIN v_weapon_definition d ON d.item_hash = w.item_hash
 WHERE d.ammo != ''
+UNION
+SELECT DISTINCT 'element', element, element, element_icon, n
+FROM (${POPULAR_ELEMENTS})
 UNION
 SELECT DISTINCT 'slot', d.slot, replace(d.slot, ' Weapons', ''), '', d.slot_order
 FROM v_popularity_weapon w
@@ -707,6 +743,7 @@ export function loadReport(db: Database) {
     purge_counts: rows(PURGE_COUNTS),
     weapon_flags: rows(WEAPON_FLAGS),
     roll_copies: rows(ROLL_COPIES),
+    weapon_elements: rows(WEAPON_ELEMENTS),
     popularity: rows(POPULARITY),
     popular_columns: rows(POPULAR_COLUMNS),
     popular_pairs: rows(POPULAR_PAIRS),

@@ -592,6 +592,9 @@ svg.defs { position: absolute; }
 .pop-name { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .pop-name h5 { margin: 0; font: 700 30px/1.1 var(--head); color: var(--ink-hi); }
 .pop-name .sub2 { font-size: 16.25px; color: var(--muted); }
+/* A Popular weapon's element under its name, as a weapon card's; side by side
+   where its versions come in more than one. */
+.pop-name .elements { display: flex; flex-wrap: wrap; gap: 5px 20px; }
 /* A Popular row's confidence chip at the top right, light.gg and My Copies
    under it, as on a weapon card. */
 .pop-facts { align-self: flex-start; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; font-size: 16.25px; color: var(--ink-mid); }

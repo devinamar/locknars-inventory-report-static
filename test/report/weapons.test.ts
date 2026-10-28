@@ -165,7 +165,7 @@ test("a copy's entry names the lists it matches as the wishlist switch shows", (
     '<span class="none" data-wl="aegis_endgame aegis_shopping" hidden>Missing wishlist entries</span>',
   )
   expect(page).toContain(
-    '<article class="card fam" data-side="pve" data-wpn="all dupes listed-* listed-voltron listed-mine">',
+    '<article class="card fam" data-side="pve" data-wpn="all dupes listed-* listed-voltron listed-mine Kinetic">',
   )
   expect(page).toContain('<i class="wl-dot l4" aria-hidden="true"></i>Mine</button>')
 })
@@ -175,7 +175,7 @@ test('a weapon no list covers says so', () => {
   // entries in every view.
   rifleCopies()
   const page = weaponsPage()
-  expect(page).toContain('<article class="card fam" data-side="pve" data-wpn="all dupes">')
+  expect(page).toContain('<article class="card fam" data-side="pve" data-wpn="all dupes Kinetic">')
   expect(entry(page, 1)).toContain(
     '<span class="none" data-wl="* voltron aegis_endgame aegis_shopping">Missing wishlist entries</span>',
   )
@@ -298,6 +298,38 @@ test('copies that differ in element each name theirs', () => {
   expect(page).toContain('<span class="fam-stats">\n<span class="frame">')
   expect(entry(page, 1)).toContain('>Solar</span>')
   expect(entry(page, 2)).toContain('>Arc</span>')
+})
+
+test("the Element switch offers the cards' elements and each card names its copies'", () => {
+  // The Test Rifle's copies are Solar and Arc (rolled, not its own Kinetic),
+  // the Solo Rifle's its own Kinetic. The switch, a weapons switch after the
+  // Weapons row, offers just those three, All first, in the game's order with
+  // the manifest's icons; each card names its copies' elements among its
+  // switch values, so the Test Rifle shows for either of its own.
+  db.exec("UPDATE DestinyDamageTypeDefinition SET icon = '/' || lower(name) || '.png'")
+  c.addWeaponDef(db, 100)
+  c.addWeaponDef(db, 200, { name: 'Solo Rifle' })
+  for (const [instanceId, itemHash, element] of [
+    ['w1', 100, 3],
+    ['w2', 100, 2],
+    ['s1', 200, null],
+  ] as const) {
+    c.addCopy(db, instanceId, itemHash, c.WEAPON_SOCKETS, { damageType: element })
+    db.exec('INSERT INTO weapon_result VALUES (?, 0, 0)', { bind: [instanceId] })
+  }
+  const page = weaponsPage()
+  const button = (name: string) =>
+    `<button type="button" data-value="${name}" aria-pressed="false">` +
+    `<img src="https://www.bungie.net/${name.toLowerCase()}.png" alt="">${name}</button>\n`
+  expect(page).toContain(
+    'Has wishlist</button>\n</div>\n</div>\n<div class="switch-row">\n<span class="label">Element</span>\n' +
+      '<div class="switch multi" role="group" aria-label="Element" data-key="wpn">\n' +
+      '<button type="button" data-value="all" aria-pressed="true">All</button>\n' +
+      ['Kinetic', 'Arc', 'Solar'].map(button).join('') +
+      '</div>\n</div>',
+  )
+  expect(page).toContain('<article class="card fam" data-side="pve" data-wpn="all dupes Solar Arc">')
+  expect(page).toContain('<article class="card fam" data-side="pve" data-wpn="all Kinetic">')
 })
 
 test("a true duplicate goes to its keeper's card", () => {

@@ -128,7 +128,7 @@
 <button type="button" class="side-pvp" data-value="pvp" aria-pressed="false">PvP</button>
 </div>
 </div>
-{# The weapons switches: a card shows when its data-wpn names the pressed value of each; Has wishlist stands for the list the wishlist switch shows (listed-<key>, listed-* for All lists). #}
+{# The weapons switches: a card shows when its data-wpn names the pressed value of each; Has wishlist stands for the list the wishlist switch shows (listed-<key>, listed-* for All lists). Element, a multi switch, can press several elements: a card shows when it names any of them, its copies' elements. #}
 <div class="switch-row">
 <span class="label">Weapons</span>
 <div class="switch" role="group" aria-label="Weapons" data-key="wpn">
@@ -138,6 +138,15 @@
 <div class="switch" role="group" aria-label="Wishlist entries" data-key="wpn">
 <button type="button" data-value="all" aria-pressed="true">All</button>
 <button type="button" data-value="listed" aria-pressed="false">Has wishlist</button>
+</div>
+</div>
+<div class="switch-row">
+<span class="label">Element</span>
+<div class="switch multi" role="group" aria-label="Element" data-key="wpn">
+<button type="button" data-value="all" aria-pressed="true">All</button>
+{% for e in weapon_elements %}
+<button type="button" data-value="{{ e.element }}" aria-pressed="false">{% if e.element_icon %}<img src="{{ e.element_icon }}" alt="">{% endif %}{{ e.element }}</button>
+{% endfor %}
 </div>
 </div>
 {% if wishlists|length > 1 %}
@@ -166,7 +175,7 @@
 {% set first = copies[0] %}
 {% set kind %}{{ first.wtype }}{% if first.archetypes == 1 %} · {{ first.archetype }}{% endif %}{% endset %}
 {% set covered = first.covered.split() %}
-<article class="card fam" data-side="pve" data-wpn="all{% if copies|length > 1 %} dupes{% endif %}{% if covered %} listed-*{% endif %}{% for key in covered %} listed-{{ key }}{% endfor %}">
+<article class="card fam" data-side="pve" data-wpn="all{% if copies|length > 1 %} dupes{% endif %}{% if covered %} listed-*{% endif %}{% for key in covered %} listed-{{ key }}{% endfor %}{% for element in copies|map(attribute='element')|unique %} {{ element }}{% endfor %}">
 <header class="fam-head">
 <div class="fam-id">
 <h5><button type="button" class="toggle" aria-expanded="false" aria-controls="fam-{{ first.grid_id }}" aria-label="{{ card }}">{{ m.chevron() }}<span class="wicon" role="img" aria-label="{{ kind }}" title="{{ kind }}"><img src="{{ first.icon }}" alt="" loading="lazy">{% if first.watermark %}<img src="{{ first.watermark }}" alt="" loading="lazy">{% endif %}</span><span class="fam-name"><span class="fam-title">{{ first.family }}{% if first.ammo %}<img class="ammo" src="{{ first.ammo_icon }}" alt="{{ first.ammo|capitalize }} ammo" title="{{ first.ammo|capitalize }} ammo" loading="lazy">{% endif %}</span>{% if first.pool %}<span class="fam-pool">{{ first.pool }}</span>{% endif %}{% if first.origins == 1 %}{{ origin(first) }}{% endif %}</span></button></h5>

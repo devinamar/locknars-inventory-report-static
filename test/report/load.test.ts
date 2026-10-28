@@ -137,6 +137,25 @@ test("roll copies rank each card's copies by popularity", () => {
   expect([totals.matched, totals.uncovered]).toEqual([3, 1])
 })
 
+test("the weapons page's elements are its cards' copies', in the game's order", () => {
+  // A copy's element is its own (the Arc and Solar copies of the Kinetic
+  // Test Rifle) or its weapon's (the third copy). The Void Old Rifle, below
+  // Legendary, is flagged and on no card, so the switch doesn't offer Void.
+  addRifle()
+  addRifleCopy('solar', [c.TRAIT_PERK_A], 5, 0, 1, 3)
+  addRifleCopy('arc', [c.TRAIT_PERK_A], 5, 0, 1, 2)
+  addRifleCopy('kinetic', [c.TRAIT_PERK_A], 5, 0)
+  c.addWeaponDef(db, 300, { name: 'Old Rifle', tier: 3, damageType: 4 })
+  c.addCopy(db, 'old', 300)
+  db.exec("INSERT INTO weapon_pruning VALUES ('old', 'below_legendary', NULL)")
+  db.exec("UPDATE DestinyDamageTypeDefinition SET icon = '/' || lower(name) || '.png'")
+  expect(rows(load.WEAPON_ELEMENTS, 'element', 'element_icon')).toEqual([
+    ['Kinetic', 'https://www.bungie.net/kinetic.png'],
+    ['Arc', 'https://www.bungie.net/arc.png'],
+    ['Solar', 'https://www.bungie.net/solar.png'],
+  ])
+})
+
 test('grid rows name the copies with each perk and the rolls they complete', () => {
   // a (1 on the card) can switch between Kill Clip and Rampage, b (2) has
   // Rampage. Both complete One's Rampage roll, a Two's Kill Clip roll too:
@@ -446,13 +465,36 @@ test("a grid's pairs carry both sides' figures and the copies making them", () =
   ])
 })
 
-test("Popular's filters offer the scored weapons' types, slots and ammo", () => {
+test("Popular's filters offer the scored weapons' types, slots, ammo and elements", () => {
   addScoredGuns()
   expect(rows(load.POPULAR_OPTIONS, 'kind', 'value', 'label')).toEqual([
     ['ammo', 'primary', 'Primary'],
     ['ammo', 'special', 'Special'],
+    ['element', 'Kinetic', 'Kinetic'],
     ['slot', 'Kinetic Weapons', 'Kinetic'],
     ['type', 'Auto Rifle', 'Auto Rifle'],
+  ])
+})
+
+test("a scored weapon's elements are its versions', in the game's order", () => {
+  // Gun (Adept), a version of Gun, is Arc, as reissues changed some weapons'
+  // elements: Gun comes in Kinetic and Arc, in the damage types' order rather
+  // than by name, and so do the Element filter's choices, with their icons.
+  addScoredGuns()
+  db.exec("UPDATE DestinyDamageTypeDefinition SET icon = '/' || lower(name) || '.png'")
+  db.exec(
+    'UPDATE DestinyInventoryItemDefinition SET defaultDamageTypeHash = ' +
+      "(SELECT hash FROM DestinyDamageTypeDefinition WHERE name = 'Arc') WHERE hash = 101",
+  )
+  expect(rows(load.POPULARITY, 'side', 'name', 'element')).toEqual([
+    ['pve', 'Rifle', 'Kinetic'],
+    ['pve', 'Gun', 'Kinetic Arc'],
+    ['pvp', 'Gun', 'Kinetic Arc'],
+  ])
+  const options = db.selectObjects(load.POPULAR_OPTIONS).filter((o) => o.kind === 'element')
+  expect(options.map((o) => [o.value, o.icon])).toEqual([
+    ['Kinetic', 'https://www.bungie.net/kinetic.png'],
+    ['Arc', 'https://www.bungie.net/arc.png'],
   ])
 })
 

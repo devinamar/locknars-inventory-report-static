@@ -628,8 +628,9 @@ function setSide(card, side) {
 }
 
 // Popular's filters: a row shows when its name holds the search, it is of the
-// type chosen, of a slot and an ammo type chosen (any while none is), and in
-// the vault while In my vault is pressed. The count is the shown side's.
+// type chosen, of a slot, an ammo type and an element chosen (any while none
+// is; a weapon whose versions come in several elements, of any of them), and
+// in the vault while In my vault is pressed. The count is the shown side's.
 function filterPopular(page) {
     const search = page.querySelector('.search');
     if (!search) {
@@ -642,6 +643,7 @@ function filterPopular(page) {
         .filter(Boolean);
     const slots = chosen('slot');
     const ammo = chosen('ammo');
+    const elements = chosen('element');
     const owned = page.querySelector('[data-filter="owned"]').getAttribute('aria-pressed') === 'true';
     let shown = 0;
     let total = 0;
@@ -651,6 +653,7 @@ function filterPopular(page) {
                 && (!type || row.dataset.type === type)
                 && (!slots.length || slots.includes(row.dataset.slot))
                 && (!ammo.length || ammo.includes(row.dataset.ammo))
+                && (!elements.length || row.dataset.element.split(' ').some((e) => elements.includes(e)))
                 && (!owned || row.hasAttribute('data-owned'));
             row.hidden = !show;
             if (!list.hidden) {
@@ -723,23 +726,26 @@ document.addEventListener('toggle', (e) => {
 }, true);
 
 // Switches: a page's elements show when their data-<key> names, among its
-// space-separated values, the pressed value of every switch with that key.
-// Has wishlist (listed) stands for the list the wishlist switch shows:
-// listed-<key>, or listed-* for All lists. The weapon sections are recounted.
+// space-separated values, the pressed value of every switch with that key (one
+// of them for a multi switch, which can press several: the weapons page's
+// Element). Has wishlist (listed) stands for the list the wishlist switch
+// shows: listed-<key>, or listed-* for All lists. The weapon sections are
+// recounted.
 function applySwitches(page) {
     const list = page.querySelector('.switch[data-key="wl"] [aria-pressed="true"]');
+    const value = (b) => {
+        if (b.dataset.value === 'listed') {
+            return 'listed-' + (list ? list.dataset.value : '*');
+        }
+        return b.dataset.value;
+    };
     const keys = new Set([...page.querySelectorAll('.switch[data-key]')].map((sw) => sw.dataset.key));
     for (const key of keys) {
-        const pressed = page.querySelectorAll(`.switch[data-key="${key}"] [aria-pressed="true"]`);
-        const values = [...pressed].map((b) => {
-            if (b.dataset.value === 'listed') {
-                return 'listed-' + (list ? list.dataset.value : '*');
-            }
-            return b.dataset.value;
-        });
+        const pressed = [...page.querySelectorAll(`.switch[data-key="${key}"]`)]
+            .map((sw) => [...sw.querySelectorAll('[aria-pressed="true"]')].map(value));
         for (const el of page.querySelectorAll('[data-' + key + ']')) {
             const shows = el.dataset[key].split(' ');
-            el.hidden = !values.every((value) => shows.includes(value));
+            el.hidden = !pressed.every((values) => values.some((v) => shows.includes(v)));
         }
     }
     countCards(page);
@@ -792,8 +798,9 @@ document.addEventListener('click', (e) => {
     // A switch: one button pressed at a time, the page's elements shown to
     // match (applySwitches). A multi switch's buttons each toggle beside its
     // All, which clears them; a flip switch's one button flips. Both filter
-    // Popular. A side switch sets the side of its weapon card, or of every
-    // card for the page's Popularity switch.
+    // Popular, or for a multi switch with a key (the weapons page's Element)
+    // show the page's elements as the others do. A side switch sets the side
+    // of its weapon card, or of every card for the page's Popularity switch.
     const button = e.target.closest('.switch button');
     if (button && button.closest('.switch.multi')) {
         const all = button.parentElement.children[0];
@@ -806,7 +813,11 @@ document.addEventListener('click', (e) => {
             const any = [...button.parentElement.children].some((b) => b !== all && b.getAttribute('aria-pressed') === 'true');
             all.setAttribute('aria-pressed', !any);
         }
-        filterPopular(button.closest('.page'));
+        if (button.parentElement.dataset.key) {
+            applySwitches(button.closest('.page'));
+        } else {
+            filterPopular(button.closest('.page'));
+        }
     } else if (button && button.closest('.switch.flip')) {
         button.setAttribute('aria-pressed', button.getAttribute('aria-pressed') !== 'true');
         filterPopular(button.closest('.page'));
