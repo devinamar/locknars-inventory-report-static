@@ -22,6 +22,9 @@ export type CachedReport = {
   // What DIM said for it (dimKey).
   dim: string
   html: string
+  // The report as Markdown, the copy the CLI also wrote for reading it with an
+  // LLM; a report kept before there was one has none.
+  markdown?: string
 }
 
 // What DIM said, as the report's cache keeps it: the tags and notes with the

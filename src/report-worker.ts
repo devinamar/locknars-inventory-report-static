@@ -37,7 +37,7 @@ try {
     { saveDimAnnotations },
     { analyzeArmor, analyzeWeapons },
     { loadReport },
-    { renderBody },
+    { renderBody, renderMarkdown },
     { applyPreferences, preferenceRows },
     { addWishlist },
   ] = await Promise.all([
@@ -70,7 +70,8 @@ try {
   // The player's own wishlists, which the Preferences tab can remove.
   for (const w of data.wishlists) w.own = !defaults.has(w.key)
   const html = await step('Rendering the report', () => renderBody(data, bungieName))
-  postMessage({ html, preferences: preferenceRows(db) })
+  const markdown = await step('Writing its Markdown copy', () => renderMarkdown(data, bungieName))
+  postMessage({ html, markdown, preferences: preferenceRows(db) })
 } catch (error) {
   postMessage({ error: String(error) })
 }
