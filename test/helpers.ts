@@ -535,3 +535,72 @@ export function addPopularityFile(db: Database, categories: [string, string, str
     bind: [JSON.stringify(value)],
   })
 }
+
+type ProfileItem = { itemHash: number; itemInstanceId?: string; state?: number }
+
+type Profile = {
+  vault?: ProfileItem[]
+  equipped?: ProfileItem[]
+  sockets?: Record<string, (number | null)[]>
+  reusable?: Record<string, Record<number, number[]>>
+  instances?: Record<string, object>
+  stats?: Record<string, Record<number, number>>
+  objectives?: Record<string, Record<number, [number, number][]>>
+  carried?: ProfileItem[]
+}
+
+// {key: f(value)} for each entry of record.
+function mapValues<T>(record: Record<string, T>, f: (value: T) => unknown): Record<string, any> {
+  return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, f(value)]))
+}
+
+// The parts of a profile response the extract reads. vault, carried (a
+// character's inventory) and equipped are items ({itemHash, itemInstanceId,
+// state}); the rest are keyed by instance id: sockets ([plug hash, or null
+// for empty]), reusable ({socket index: [plug hashes]}), instances
+// (component 300 objects), stats ({stat hash: value}) and objectives ({plug
+// hash: [[objective hash, progress]]}, each one complete and visible).
+export function makeProfile(profile: Profile = {}) {
+  const {
+    vault = [],
+    equipped = [],
+    sockets = {},
+    reusable = {},
+    instances = {},
+    stats = {},
+    objectives = {},
+    carried = [],
+  } = profile
+  return {
+    profileInventory: { data: { items: [...vault] } },
+    characterInventories: { data: { char1: { items: [...carried] } } },
+    characterEquipment: { data: { char1: { items: [...equipped] } } },
+    itemComponents: {
+      sockets: { data: mapValues(sockets, (plugs) => ({ sockets: plugs.map((p) => (p ? { plugHash: p } : {})) })) },
+      reusablePlugs: {
+        data: mapValues(reusable, (bySocket) => ({
+          plugs: mapValues(bySocket, (hashes) => hashes.map((h) => ({ plugItemHash: h }))),
+        })),
+      },
+      instances: { data: { ...instances } },
+      stats: {
+        data: mapValues(stats, (s) => ({
+          stats: Object.fromEntries(Object.entries(s).map(([h, v]) => [h, { statHash: Number(h), value: v }])),
+        })),
+      },
+      plugObjectives: {
+        data: mapValues(objectives, (byPlug) => ({
+          objectivesPerPlug: mapValues(byPlug, (entries) =>
+            entries.map(([h, p]) => ({
+              objectiveHash: h,
+              progress: p,
+              completionValue: 1,
+              complete: true,
+              visible: true,
+            })),
+          ),
+        })),
+      },
+    },
+  }
+}
