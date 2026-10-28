@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Phones see the page at 80%, the size it had before it was made 25%
+         larger for desktop screens: the browser lays it out 1.25 times as
+         wide and zooms out. Desktop browsers ignore this. -->
+    <meta name="viewport" content="width=device-width, initial-scale=0.8" />
     <title>D2 Report</title>
     <!-- The report's fonts, as the CLI's report loads them. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,6 +18,9 @@
          (src/refresh.ts), in the report's colours: ↻, the status and the log's
          toggle in the corner, the log opening above them. -->
     <style>
+      /* Text at the size the page sets: iOS would enlarge it in a page
+         zoomed out, as the viewport above has it. */
+      html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
       #boot { max-width: 55rem; margin: 3.75rem auto; padding: 0 1.25rem; }
       .boot-log { list-style: none; padding: 0; font: 16.25px/1.7 'JetBrains Mono', monospace; }
       .refresh {
