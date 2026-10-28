@@ -1,10 +1,11 @@
 // Armor set grades, best first: each grade's code, label and slotCap, how
 // many copies of each slot a set of that grade keeps, per class. Their only
 // source is the armor_grade view (schema/app/armor_grade.sql); they're read
-// from its file once, so the preference editor needs no database.
+// from its file's rows of VALUES once, with no SQLite: the preference editor
+// needs no database, and a module that imports this one runs no SQL as it
+// loads (Safari can load it before SQLite's wasm is ready).
 // Ported from d2-inventory-report's analyze/armor_grades.py.
 import gradesSql from '../../schema/app/armor_grade.sql?raw'
-import { openDb } from '../db.ts'
 
 export type Grade = Readonly<{
   code: string
@@ -12,17 +13,14 @@ export type Grade = Readonly<{
   slotCap: number // copies of each slot the set keeps, per class
 }>
 
-// The grades S to F from armor_grade.sql, run in an in-memory database;
-// Unclassified (code '') is left out.
+// The grades S to F from armor_grade.sql's rows, ('S', 'Best-in-class', 4, 1)
+// for grade, label, slot_cap and position, in position order; Unclassified
+// (code '') is left out.
 function readGrades(): Grade[] {
-  const db = openDb()
-  try {
-    db.exec(gradesSql)
-    const rows = db.selectArrays("SELECT grade, label, slot_cap FROM armor_grade WHERE grade != '' ORDER BY position")
-    return rows.map(([code, label, slotCap]) => ({ code, label, slotCap }) as Grade)
-  } finally {
-    db.close()
-  }
+  return [...gradesSql.matchAll(/\('([^']*)', '([^']*)', (\d+), (\d+)\)/g)]
+    .sort((a, b) => Number(a[4]) - Number(b[4]))
+    .filter(([, code]) => code)
+    .map(([, code, label, slotCap]) => ({ code, label, slotCap: Number(slotCap) }))
 }
 
 export const GRADES = readGrades()
