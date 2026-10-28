@@ -11,7 +11,7 @@ import { exportDb } from '../src/db.ts'
 import { extractWishlists } from '../src/wishlists.ts'
 import { extractAegis } from './aegis.ts'
 import { extractClarity } from './clarity.ts'
-import { createDb, saveVocabulary } from './db.ts'
+import { createDb, materializeSharedViews, saveVocabulary } from './db.ts'
 import { extractManifest } from './manifest.ts'
 import { extractPerkScores } from './perk-scores.ts'
 
@@ -28,6 +28,8 @@ export async function buildData(outDir: string, apiKey = ''): Promise<void> {
   await extractAegis(db)
   await extractWishlists(db)
   await extractPerkScores(db)
+  const stored = materializeSharedViews(db)
+  console.log(`Stored ${stored.length} views as tables: ${stored.join(', ')}`)
   db.exec('VACUUM')
   const gz = gzipSync(exportDb(db), { level: 9 })
   if (gz.byteLength > MAX_BYTES) {

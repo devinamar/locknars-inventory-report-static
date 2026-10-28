@@ -50,6 +50,64 @@ export function createDb(): Database {
   return db
 }
 
+// The tables a player's visit writes in the browser: the profile, DIM's tags,
+// the analysis results, the player's preferences and wishlists, and the
+// sources' statuses. A view built on any of them has to be computed there.
+export const PLAYER_TABLES = [
+  'DestinyItemComponent',
+  'DestinyItemInstanceComponent',
+  'DestinyItemSocketsComponent',
+  'DestinyItemReusablePlugsComponent',
+  'DestinyItemStatsComponent',
+  'DestinyItemPlugObjectivesComponent',
+  'item_dim',
+  'weapon_result',
+  'weapon_pruning',
+  'armor_score',
+  'armor_rescue',
+  'instance_wishlist_match',
+  'armor_preference',
+  'wishlist_preference',
+  'source_status',
+]
+
+// Store every view that no player's data reaches as a table of its rows,
+// under its own name, so the browser reads it instead of working it out: the
+// weapons' perk pools, the popularity views and their helpers. The views over
+// a player's data stay views, now reading those tables. This takes the
+// report's queries from about 20 s to 8 s, for about 6.5 MB more of gzipped
+// download (10.5 MB to 17 MB).
+// A view counts as the player's when its SQL names a PLAYER_TABLES table or
+// such a view, even in a comment: a wrong guess only leaves it a view.
+// Returns the views stored, dependencies first.
+export function materializeSharedViews(db: Database): string[] {
+  const views = new Map(db.selectArrays("SELECT name, sql FROM sqlite_master WHERE type = 'view'") as [string, string][])
+  const names = db.selectValues("SELECT name FROM sqlite_master WHERE type IN ('table', 'view')") as string[]
+  const reads = (view: string) => names.filter((n) => n !== view && new RegExp(`\\b${n}\\b`).test(views.get(view)!))
+  const players = new Map<string, boolean>()
+  const isPlayers = (view: string): boolean => {
+    if (!players.has(view)) {
+      players.set(view, false)
+      players.set(view, reads(view).some((n) => PLAYER_TABLES.includes(n) || (views.has(n) && isPlayers(n))))
+    }
+    return players.get(view)!
+  }
+  const stored: string[] = []
+  const store = (view: string) => {
+    if (stored.includes(view)) return
+    for (const n of reads(view)) if (views.has(n)) store(n)
+    // Through a temporary table: renaming one would make SQLite recheck every
+    // view, and the views reading this one would name a view just dropped.
+    db.exec(
+      `CREATE TEMP TABLE shared AS SELECT * FROM "${view}"; DROP VIEW "${view}"; ` +
+        `CREATE TABLE "${view}" AS SELECT * FROM temp.shared; DROP TABLE temp.shared`,
+    )
+    stored.push(view)
+  }
+  for (const view of views.keys()) if (!isPlayers(view)) store(view)
+  return stored
+}
+
 // Replace stat_key with STAT_KEYS, once the manifest's stats are in.
 export function saveVocabulary(db: Database): void {
   db.exec('DELETE FROM stat_key')
