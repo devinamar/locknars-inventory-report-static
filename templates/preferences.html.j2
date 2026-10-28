@@ -30,7 +30,7 @@
 <thead><tr><th scope="col">Grade</th><th scope="col">Set</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
 <tbody>
 {% for p in set_preferences %}
-<tr><td title="{{ p.grade_label }}"><b>{{ p.grade or '–' }}</b></td><th scope="row"><span class="pref-name"><span class="badges">{% for b in badges_by_set.get(p.set_hash, []) %}{{ badge(b, 'set-%s' % p.set_hash) }}{% endfor %}</span>{{ p.name }}</span></th>{{ picks(p) }}</tr>
+<tr><td title="{{ p.grade_label }}"><b>{{ p.grade or '–' }}</b></td><th scope="row"><span class="pref-name"><span class="badges">{% for b in badges_by_set.get(p.set_hash, []) %}{{ badge(b, 'set-' ~ p.set_hash) }}{% endfor %}</span>{{ p.name }}</span></th>{{ picks(p) }}</tr>
 {% endfor %}
 </tbody>
 </table>
@@ -47,7 +47,7 @@
 <thead><tr><th scope="col">Exotic</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
 <tbody>
 {% for p in exotics %}
-<tr><th scope="row"><span class="pref-name">{{ badge(p, 'exo-%s' % p.item_hash) }}{{ p.name }}</span></th>{{ picks(p) }}</tr>
+<tr><th scope="row"><span class="pref-name">{{ badge(p, 'exo-' ~ p.item_hash) }}{{ p.name }}</span></th>{{ picks(p) }}</tr>
 {% endfor %}
 </tbody>
 </table>
@@ -63,7 +63,7 @@
 <thead><tr><th scope="col">Wishlist</th><th scope="col">Key</th><th scope="col">File</th></tr></thead>
 <tbody>
 {% for w in wishlists %}
-<tr><th scope="row">{{ w.label }}</th><td class="num">{{ w.key }}</td><td><a href="{{ w.url }}" title="{{ w.url }}">{{ w.url.rsplit('/', 1)[-1] or w.url }}</a></td></tr>
+<tr><th scope="row">{{ w.label }}</th><td class="num">{{ w.key }}</td><td><a href="{{ w.url }}" title="{{ w.url }}">{{ w.url.split('/')[-1] or w.url }}</a></td></tr>
 {% endfor %}
 </tbody>
 </table>

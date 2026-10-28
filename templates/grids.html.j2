@@ -11,8 +11,8 @@
 {% endfor %}
 <svg class="links" aria-hidden="true">{% for p in pairs.get(grid_id, []) %}{{ m.pair_path(p) }}{% endfor %}</svg>
 </div></div>
-{% for side in ('pve', 'pvp') if (grid_id, side) in weapons %}
-{{ m.meta_line(weapons[(grid_id, side)][0]) }}
+{% for side in ('pve', 'pvp') if weapons.get((grid_id, side)) %}
+{{ m.meta_line(weapons.get((grid_id, side))[0]) }}
 {% endfor %}
 </template>
 {% endfor %}

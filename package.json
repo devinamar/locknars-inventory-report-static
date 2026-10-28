@@ -11,7 +11,8 @@
     "check": "tsc"
   },
   "dependencies": {
-    "@sqlite.org/sqlite-wasm": "3.54.1-build1"
+    "@sqlite.org/sqlite-wasm": "3.54.1-build1",
+    "minijinja-js": "3.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

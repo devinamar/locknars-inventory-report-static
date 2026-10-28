@@ -27,9 +27,9 @@
 <article class="card build">
 <div class="build-head"><h3>{{ stat_names[b.stat_1] }} · {{ stat_names[b.stat_2] }} · {{ stat_names[b.stat_3] }}</h3><span class="short-by">Short by {{ 100 - b.low }}</span></div>
 {% for i in (1, 2, 3) %}
-{% set total = b['total_%d' % i] %}
+{% set total = b['total_' ~ i] %}
 <div class="stat-bar{% if total < 100 %} short{% endif %}">
-<span>{{ stat_names[b['stat_%d' % i]] }}</span>
+<span>{{ stat_names[b['stat_' ~ i]] }}</span>
 <div class="track" aria-hidden="true"><i style="width: {{ '%.1f'|format([total / 1.6, 100]|min) }}%"></i></div>
 <span class="num">{{ total }}</span>
 </div>
