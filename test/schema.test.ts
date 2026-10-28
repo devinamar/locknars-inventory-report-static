@@ -5,7 +5,7 @@
 import { basename } from 'node:path'
 import { expect, test } from 'vitest'
 import { createDb, schemaFiles } from '../build/db.ts'
-import { openDb } from '../src/db.ts'
+import { exportDb, loadDb, openDb } from '../src/db.ts'
 
 test('the schema builds and every view compiles', () => {
   const db = createDb()
@@ -43,5 +43,21 @@ test('numbers turn into text as they did in d2-inventory-report', () => {
 test('foreign keys are enforced', () => {
   const db = openDb()
   expect(db.selectValue('PRAGMA foreign_keys')).toBe(1)
+  db.close()
+})
+
+test('a database survives export and load, still set up like openDb', () => {
+  // The data build exports the database; the browser loads those bytes.
+  const built = createDb()
+  const bytes = exportDb(built)
+  built.close()
+  const db = loadDb(bytes)
+  expect(db.selectValues('SELECT key FROM wishlist_preference ORDER BY rowid')).toEqual([
+    'voltron',
+    'aegis_endgame',
+    'aegis_shopping',
+  ])
+  expect(db.selectValue('PRAGMA foreign_keys')).toBe(1)
+  expect(db.selectValue('SELECT CAST(2.0 / 3 AS TEXT)')).toBe('0.666666666666667')
   db.close()
 })

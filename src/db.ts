@@ -15,6 +15,20 @@ export function openDb(): Database {
   return db
 }
 
+// The database as the bytes of a SQLite file: what the data build ships.
+export function exportDb(db: Database): Uint8Array {
+  return sqlite3.capi.sqlite3_js_db_export(db)
+}
+
+// A database opened from the bytes exportDb gave, set up like openDb's.
+export function loadDb(bytes: Uint8Array): Database {
+  const db = openDb()
+  const flags = sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE | sqlite3.capi.SQLITE_DESERIALIZE_RESIZEABLE
+  const p = sqlite3.wasm.allocFromTypedArray(bytes)
+  db.checkRc(sqlite3.capi.sqlite3_deserialize(db, 'main', p, bytes.byteLength, bytes.byteLength, flags))
+  return db
+}
+
 // Run sql once for each row of values, in one transaction through one
 // prepared statement: the way to insert thousands of rows quickly.
 export function insertMany(db: Database, sql: string, rows: Iterable<BindableValue[]>): void {
