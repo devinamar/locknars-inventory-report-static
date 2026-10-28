@@ -20,11 +20,12 @@
 import { type Database } from '@sqlite.org/sqlite-wasm'
 import { insertMany } from './db.ts'
 import { get } from './http.ts'
+import { WILDCARD_ITEM_HASH } from './models.ts'
 import { saveSourceStatus } from './source-status.ts'
 
-// DIM's wildcard item hash: the roll applies to any weapon that can roll its
-// perks. Stored as-is; the scorer checks these rolls against every copy.
-export const WILDCARD_ITEM_HASH = -69420
+// Defined in models.ts; still exported here for the code that imports it from
+// this module.
+export { WILDCARD_ITEM_HASH }
 
 // Matches dimwishlist and dimtrashlist lines. Anchored at the start only, so
 // stray text after the notes doesn't drop the whole line.
