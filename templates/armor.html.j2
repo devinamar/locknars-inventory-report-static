@@ -41,7 +41,7 @@
 <div class="kv"><span class="label">Preferred Stats</span>
 <ol class="picks">
 {% for key in [s.stat_1, s.stat_2, s.stat_3] if key %}
-<li><span class="num">{{ loop.index }}.</span><img src="{{ stat_icons[key] }}" alt="" width="16" height="16">{{ stat_names[key] }}</li>
+<li><span class="num">{{ loop.index }}.</span><img src="{{ stat_icons[key] }}" alt="" width="20" height="20">{{ stat_names[key] }}</li>
 {% else %}
 <li>None: scored on the stat total</li>
 {% endfor %}

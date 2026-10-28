@@ -10,12 +10,12 @@
 {% endmacro %}
 
 {# The chevron that leads a collapsible section's summary line. #}
-{% macro chevron() %}<svg class="chev" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>{% endmacro %}
+{% macro chevron() %}<svg class="chev" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>{% endmacro %}
 
 {# The double chevron that rolls a group down or up: a section, every section in it and every card in them open or close together. It turns down while they are open (open, at first). #}
 {% macro expand(open=false) %}
 {% set label %}{% if open %}Collapse all{% else %}Expand all{% endif %}{% endset %}
-<button type="button" class="expand" aria-expanded="{{ open|lower }}" aria-label="{{ label }}" title="{{ label }}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6"></path><path d="M12 6l6 6-6 6"></path></svg></button>
+<button type="button" class="expand" aria-expanded="{{ open|lower }}" aria-label="{{ label }}" title="{{ label }}"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9a9a78" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l6 6-6 6"></path><path d="M12 6l6 6-6 6"></path></svg></button>
 {%- endmacro %}
 
 {# A button that copies the DIM query for rows' copies. #}
@@ -28,23 +28,23 @@
 <button type="button" class="dim purge" data-q="{{ rows|dim }}">Copy purge IDs</button>
 {% endmacro %}
 
-{# A 16px line icon: the lock, or a DIM tag's (the shapes of DIM's own tag
+{# A 20px line icon: the lock, or a DIM tag's (the shapes of DIM's own tag
    icons). #}
 {% macro icon(name, label) %}
 {% set shapes = {
-    'locked': '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    'locked': '<rect x="5" y="11" width="17.5" height="12.5" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     'favorite': '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
     'keep': '<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><path d="M7 7h.01"/>',
     'infuse': '<path d="M13 2L3 14h9l-1 8 10-12h-9z"/>',
     'junk': '<circle cx="12" cy="12" r="10"/><path d="M4.9 4.9l14.2 14.2"/>',
-    'archive': '<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/>',
+    'archive': '<rect x="3" y="4" width="22.5" height="6.25" rx="1"/><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M10 13h4"/>',
 } %}
-<svg role="img" aria-label="{{ label }}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{{ shapes[name]|safe }}</svg>
+<svg role="img" aria-label="{{ label }}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">{{ shapes[name]|safe }}</svg>
 {% endmacro %}
 
 {# One of a piece's stats as its icon and value, boxed when its tuning
    socket can raise it, and then greyed if the piece has 0. #}
-{% macro stat(p, key, tuned) %}<span{% if tuned %} class="tuned{% if not p[key] %} zero{% endif %}"{% endif %} title="{{ stat_names[key] }}"><img src="{{ stat_icons[key] }}" alt="{{ stat_names[key] }}" width="16" height="16">{{ p[key] }}</span>{% endmacro %}
+{% macro stat(p, key, tuned) %}<span{% if tuned %} class="tuned{% if not p[key] %} zero{% endif %}"{% endif %} title="{{ stat_names[key] }}"><img src="{{ stat_icons[key] }}" alt="{{ stat_names[key] }}" width="20" height="20">{{ p[key] }}</span>{% endmacro %}
 
 {# A piece's non-zero stats, then any stat its tuning can raise that it
    doesn't roll. #}
@@ -105,7 +105,7 @@
 {% endmacro %}
 
 {# A sample of a pair line for the legend, in a colour or the heat scale's gradient (#heat-line, in grids.html.j2), dashed for a pair the copy can't make. #}
-{% macro line_sample(stroke, dashed=false) %}<svg class="links" width="34" height="12" aria-hidden="true"><path d="M2 10 C17 10 17 2 32 2" stroke-width="2.5" style="stroke:{{ stroke }}{% if dashed %};stroke-dasharray:6 5{% endif %}"></path></svg>{% endmacro %}
+{% macro line_sample(stroke, dashed=false) %}<svg class="links" width="42.5" height="15" aria-hidden="true"><path d="M2 10 C17 10 17 2 32 2" stroke-width="2.5" style="stroke:{{ stroke }}{% if dashed %};stroke-dasharray:6 5{% endif %}"></path></svg>{% endmacro %}
 
 {# The perk grids' legend: heat, wishlist rings, the copy's outline and the pair lines, with a copy shown (the weapons page) or without (Popular). #}
 {% macro legend(with_copy) %}

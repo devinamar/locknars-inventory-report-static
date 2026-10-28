@@ -39,7 +39,7 @@ test("a set's pieces show their scores and badges", () => {
   expect(page).toContain('<span class="score">75</span>\n<span class="chip">Purge</span>')
   expect(page).toContain('<span class="score">90</span>\n<span class="chip">Dupe</span>')
   expect(page).toContain('<span class="chip keep">Keep:<img src="https://www.bungie.net/img/health.png"')
-  expect(page).toContain('alt="health" width="16" height="16">30</span>')
+  expect(page).toContain('alt="health" width="20" height="20">30</span>')
 })
 
 test('the tuning stats are boxed and the gain shown', () => {
@@ -67,5 +67,5 @@ test('a set with nothing flagged is left out', () => {
   // Only the Markdown lists it.
   const page = armorPage()
   expect(page).not.toContain('Kept Set')
-  expect(page).not.toContain('alt="grenade" width="16" height="16">30')
+  expect(page).not.toContain('alt="grenade" width="20" height="20">30')
 })
