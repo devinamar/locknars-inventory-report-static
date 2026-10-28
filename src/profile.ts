@@ -13,17 +13,6 @@ import { type BindableValue, type Database } from '@sqlite.org/sqlite-wasm'
 import { insertMany } from './db.ts'
 import { saveSourceStatus } from './source-status.ts'
 
-// The profile API components the app requests:
-//   102 = ProfileInventories (vault)
-//   201 = CharacterInventories
-//   205 = CharacterEquipment
-//   300 = ItemInstances
-//   304 = ItemStats
-//   305 = ItemSockets (the plug in each socket)
-//   309 = ItemPlugObjectives (kill trackers and other plug progress)
-//   310 = ItemReusablePlugs (the plugs each socket can switch to)
-export const PROFILE_COMPONENTS = [102, 201, 205, 300, 304, 305, 309, 310]
-
 // A part of Bungie's response, read field by field like the CLI's dicts.
 type Json = Record<string, any>
 

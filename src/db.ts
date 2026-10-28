@@ -20,6 +20,21 @@ export function exportDb(db: Database): Uint8Array {
   return sqlite3.capi.sqlite3_js_db_export(db)
 }
 
+// The shared database the data build made, downloaded from url (its gzipped
+// file) and opened. The file is unzipped here, unless the server sent it with
+// Content-Encoding: gzip and the browser already did (Vite's preview server
+// does); a gzip file starts with the bytes 1f 8b.
+export async function downloadDb(url: string): Promise<Database> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
+  let bytes = new Uint8Array(await response.arrayBuffer())
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    const unzipped = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
+    bytes = new Uint8Array(await new Response(unzipped).arrayBuffer())
+  }
+  return loadDb(bytes)
+}
+
 // A database opened from the bytes exportDb gave, set up like openDb's.
 export function loadDb(bytes: Uint8Array): Database {
   const db = openDb()

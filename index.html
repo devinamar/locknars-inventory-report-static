@@ -11,11 +11,25 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500;800&display=swap"
     />
+    <!-- The boot log, and the panel it moves to over a report from the cache. -->
+    <style>
+      #boot { max-width: 44rem; margin: 3rem auto; padding: 0 1rem; }
+      .boot-log { list-style: none; padding: 0; font: 13px/1.7 'JetBrains Mono', monospace; }
+      .boot-panel {
+        position: fixed; right: 1rem; bottom: 1rem; z-index: 1000; max-width: 28rem;
+        padding: 0.5rem 0.9rem; border-radius: 6px; background: #1c1f24; color: #e6e6e6;
+        box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+      }
+      .boot-panel .boot-log { margin: 0; }
+      .boot-panel button { margin: 0.3rem 0 0.2rem; }
+    </style>
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <h1>D2 Report</h1>
-    <p id="status">Loading…</p>
-    <button id="login" hidden>Log in with Bungie</button>
+    <main id="boot">
+      <h1>D2 Report</h1>
+      <ol class="boot-log" id="log"></ol>
+      <button id="login" hidden>Log in with Bungie</button>
+    </main>
   </body>
 </html>

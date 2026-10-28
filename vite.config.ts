@@ -7,6 +7,9 @@ export default defineConfig({
   // browser warns once).
   plugins: [basicSsl()],
   server: { port: 5173, strictPort: true },
+  // The report's worker is a module worker: sqlite-wasm and minijinja-js
+  // start up with a top-level await, which a classic script can't hold.
+  worker: { format: 'es' },
   // sqlite-wasm finds its .wasm file next to its own module, which Vite's
   // dependency pre-bundling would move out from under it.
   optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },

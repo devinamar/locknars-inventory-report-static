@@ -169,6 +169,17 @@ export async function getAccount(token: string): Promise<Account> {
   }
 }
 
+// The profile API components the app requests:
+//   102 = ProfileInventories (vault)
+//   201 = CharacterInventories
+//   205 = CharacterEquipment
+//   300 = ItemInstances
+//   304 = ItemStats
+//   305 = ItemSockets (the plug in each socket)
+//   309 = ItemPlugObjectives (kill trackers and other plug progress)
+//   310 = ItemReusablePlugs (the plugs each socket can switch to)
+export const PROFILE_COMPONENTS = [102, 201, 205, 300, 304, 305, 309, 310]
+
 // A player's profile with the given components, in one request.
 export function getProfile(token: string, account: Account, components: number[]): Promise<any> {
   const endpoint = `/Destiny2/${account.membershipType}/Profile/${account.membershipId}/`
