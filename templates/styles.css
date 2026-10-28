@@ -99,18 +99,19 @@ h3 { margin: 0; font: 700 22px/1.15 var(--head); color: var(--ink-hi); }
 .callout { margin: 0; padding: 12px 16px; border: 1px solid var(--keep-line); border-radius: 10px; color: var(--ink-mid); }
 .label { font: 600 13px var(--head); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
-/* Buttons: switches, DIM copy */
+/* Buttons: switches, DIM copy, and the Preferences tab's actions (act) */
 .switch { display: flex; flex-wrap: wrap; gap: 8px; }
 .switch button { font-weight: 600; font-size: 15px; min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid var(--line-hi); background: transparent; color: var(--ink-mid); cursor: pointer; }
 .switch button .num { font-weight: 400; color: var(--muted); }
 .switch button[aria-pressed="true"] { border-color: var(--keep); background: var(--keep-fill); color: var(--ink-hi); }
-.dim, .lgg, .goto { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--keep-line); background: transparent; color: var(--keep); font-size: 14px; font-weight: 600; cursor: pointer; }
-.dim:hover, .lgg:hover, .goto:hover { background: var(--keep-fill); }
+.dim, .lgg, .goto, .act { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--keep-line); background: transparent; color: var(--keep); font-size: 14px; font-weight: 600; cursor: pointer; }
+.dim:hover, .lgg:hover, .goto:hover, .act:hover { background: var(--keep-fill); }
 /* A flagged copy's My Copies, under its tile's text. */
 .tile .goto { align-self: flex-start; margin-top: 6px; }
-/* A purge query's button, in the Purge badge's yellow. */
-.dim.purge { border-color: var(--purge-line); color: var(--purge); }
-.dim.purge:hover { background: color-mix(in srgb, var(--purge) 14%, var(--card)); }
+/* A purge query's button, in the Purge badge's yellow; so is the Preferences
+   tab's reset. */
+.dim.purge, .act.purge { border-color: var(--purge-line); color: var(--purge); }
+.dim.purge:hover, .act.purge:hover { background: color-mix(in srgb, var(--purge) 14%, var(--card)); }
 .lgg { display: inline-flex; align-items: center; text-decoration: none; }
 
 /* Summary */
@@ -372,17 +373,54 @@ tbody th { font-weight: 600; color: var(--ink-hi); }
 .rescue li b { color: var(--ink-hi); }
 .rescue li span { color: var(--ink-mid); }
 
-/* Preferences */
+/* Preferences: the player's own, each changed in place (src/preferences-tab.ts):
+   a set's grade dropdown with its moves up and down the grade, the stat
+   dropdowns, the wishlist form and the backup, a cyan ring on the focused
+   control, and the bar at the tab's end, held at the bottom of the window,
+   that says what was saved. */
 .folds { display: flex; flex-direction: column; gap: 16px; }
+.fold-note { margin: 0; padding: 0 20px 14px; max-width: 900px; color: var(--ink-mid); }
 .prefs { min-width: 640px; }
 .prefs th, .prefs td { padding: 8px 16px; }
 .prefs thead th { padding: 10px 16px; }
-.prefs .muted { color: var(--muted); }
 .pref-name { display: inline-flex; align-items: center; gap: 10px; }
 .prefs .wicon { width: 32px; height: 32px; border-radius: 3px; cursor: help; }
 .prefs .badges { display: inline-flex; gap: 4px; width: 104px; flex: none; }
-.stat-pick { display: inline-flex; align-items: center; gap: 6px; }
-.stat-pick img { opacity: 0.85; }
+.place { display: inline-flex; align-items: center; gap: 6px; }
+#page-preferences :is(select, input) { min-height: 36px; padding: 0 10px; border: 1px solid var(--line-hi); border-radius: 6px; background: var(--tile); color: var(--ink); font: 15px var(--body); }
+#page-preferences input[type="file"] { padding: 6px 10px; }
+#page-preferences :is(select, button, input):disabled { opacity: 0.45; cursor: default; }
+.move { width: 36px; min-height: 36px; padding: 0; border: 1px solid var(--keep-line); border-radius: 6px; background: transparent; color: var(--keep); font-size: 12px; cursor: pointer; }
+.move:hover { background: var(--keep-fill); }
+/* A move past its grade's end: dimmed by colour, not disabled, so the focus
+   stays on it. */
+.move[aria-disabled="true"] { border-color: var(--line); background: none; color: var(--line-hi); cursor: default; }
+#page-preferences :is(select, button, input):focus-visible { outline: 2px solid var(--keep); outline-offset: 2px; }
+.pref-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; padding: 16px 20px 20px; border-top: 1px solid var(--line); }
+/* A form's paragraph on a line of its own, no wider than 900px: what the
+   line has left over is its margin. */
+.pref-form p { flex: 0 0 100%; max-width: 900px; margin: 0 max(0px, 100% - 900px) 0 0; color: var(--ink-mid); }
+.pref-form label { display: flex; flex: 1 1 16rem; flex-direction: column; gap: 4px; color: var(--muted); font-size: 14px; }
+.pref-bar { position: sticky; bottom: 12px; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 8px 14px; border: 1px solid var(--keep-line); border-radius: 10px; background: var(--card); box-shadow: 0 6px 18px #000a; font-size: 15px; line-height: 1.35; }
+.pref-bar p { margin: 0; }
+.pref-status { color: var(--keep); }
+.pref-stale { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; color: var(--ink-hi); }
+.pref-stale .act { min-height: 32px; }
+/* Nothing to say yet: no bar, but its status stays in the page, so a screen
+   reader reads out what it says next. */
+.pref-bar:has(.pref-status:empty):has(.pref-stale[hidden]) { padding: 0; border: 0; box-shadow: none; }
+/* On a phone, a preference's row stacks rather than scrolls sideways: its
+   name, a set's grade and moves, then its stat dropdowns side by side under
+   the 1st, 2nd and 3rd headings. */
+@media (max-width: 640px) {
+    .prefs:not(.lists), .prefs:not(.lists) :is(thead, tbody) { display: block; min-width: 0; }
+    .prefs:not(.lists) tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px 16px; }
+    .prefs:not(.lists) :is(th, td) { padding: 0; }
+    .prefs:not(.lists) thead th:not(:nth-last-child(-n + 3)) { display: none; }
+    .prefs:not(.lists) tbody :is(th, td:has(.place)) { grid-column: 1 / -1; }
+    .prefs:not(.lists) tbody th { order: -1; }
+    .prefs:not(.lists) .pick { width: 100%; }
+}
 
 /* Perk tooltip: one element, filled from the hidden tip-<plug hash> blocks */
 .tip { position: fixed; z-index: 10; max-width: 320px; padding: 10px 12px; border: 1px solid var(--line-hi); border-radius: 8px; background: #0c0c08f2; box-shadow: 0 6px 18px #000a; pointer-events: none; font-size: 14px; line-height: 1.45; }

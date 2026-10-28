@@ -3,14 +3,14 @@
 // shows each step. As DIM does with its last profile, the finished report is
 // kept in the browser (src/cache.ts) and shown at once on the next visit; it
 // is rebuilt only when Bungie made a newer profile, the shared data changed
-// or the player changed their settings (settings.html), and the panel in the
-// corner then offers the new one.
+// or the player changed their settings (in the report's Preferences tab), and
+// the panel in the corner then offers the new one.
 import '../templates/styles.css'
 import reportJs from '../templates/report.js?url'
 import { PROFILE_COMPONENTS, authenticate, getAccount, getProfile, startLogin } from './bungie.ts'
 import { type CachedReport, dimKey, loadReportCache, saveReportCache, upToDate } from './cache.ts'
 import { fetchDimAnnotations } from './dim.ts'
-import { type LastBuild, type PreferenceRow, keepLastBuild, keepSaved, loadSaved } from './saved.ts'
+import { type PreferenceRow, keepSaved, loadSaved } from './saved.ts'
 
 // Where the boot log's lines go: the boot screen's list, or the corner panel's
 // over a report from the cache.
@@ -49,17 +49,18 @@ async function logged<T>(label: string, step: () => Promise<T>): Promise<T> {
   }
 }
 
-// Put the report's HTML in the page, with a link to the settings page after
-// its pages, then report.js, which runs its tabs, switches and grids once,
-// after the HTML is in.
-function showReport(report: { html: string; bungieName: string }) {
+// Put the report's HTML in the page, then report.js, which runs its tabs,
+// switches and grids once, after the HTML is in, and the Preferences tab's
+// controls, told the settings the report was built with. Their module comes
+// only now: the grades it ranks sets by are read through SQLite
+// (src/analyze/armor-grades.ts), whose wasm the boot log shouldn't wait for.
+function showReport(report: CachedReport) {
   document.body.innerHTML = report.html
   document.title = `${report.bungieName} · Destiny 2 Inventory Report`
-  const edit = Object.assign(document.createElement('a'), { href: 'settings.html', textContent: 'Edit preferences' })
-  document.querySelector('nav')?.append(edit)
   const script = document.createElement('script')
   script.src = reportJs
   document.body.append(script)
+  import('./preferences-tab.ts').then((tab) => tab.setup(report.settings))
 }
 
 // The corner panel over a report from the cache, which the boot log moves to.
@@ -73,9 +74,9 @@ function showPanel(): HTMLElement {
   return panel
 }
 
-// What a build sends back: the report's HTML, the preferences it ended with,
-// and what the settings page shows beside them.
-type Built = LastBuild & { html: string; preferences: PreferenceRow[] }
+// What a build sends back: the report's HTML and the preferences it ended
+// with.
+type Built = { html: string; preferences: PreferenceRow[] }
 
 // The worker, which starts downloading the shared database at once; its steps
 // go into the boot log as they start and finish (or fail, for a step the
@@ -155,10 +156,10 @@ try {
       work.worker.postMessage({ profile, bungieName: account.bungieName, dim, ...saved })
       const built = await work.built
       work.worker.terminate()
-      keepLastBuild({ notes: built.notes, wishlists: built.wishlists })
       // The preferences the build ended with become the player's, so the
-      // settings page lists them all; unless the player changed theirs during
-      // the build (in another tab), which the next visit then builds with.
+      // Preferences tab edits them all; unless the player changed theirs
+      // during the build (in the tab of the report shown meanwhile, or in
+      // another), which the next visit then builds with.
       if (JSON.stringify(loadSaved()) === report.settings) {
         keepSaved({ ...saved, preferences: built.preferences })
         report.settings = JSON.stringify(loadSaved())

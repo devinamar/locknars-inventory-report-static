@@ -1,19 +1,18 @@
-{# Preferences: everything the app stores from the player, in sections that open and close: each armor set's preferred stats and grade, in rank order within the grade; each exotic's preferred stats, by class; and the wishlists weapon rolls are scored against. A set's or exotic's badge shows its bonuses or its perk when pointed at. #}
+{# Preferences: everything the app stores from the player, and where they change it, in sections that open and close: each armor set's preferred stats, grade and place in rank order within the grade; each exotic's preferred stats, by class; the wishlists weapon rolls are scored against, with a form for the player's own (w.own, which the site marks); a backup file; and the armor preferences back to the defaults. A set's or exotic's badge shows its bonuses or its perk when pointed at. Each control's row names the preference it changes (data-name); src/preferences-tab.ts saves a change in the browser at once, keeps the controls as saved, and says so in the bar at the end. #}
 {% import 'macros.html.j2' as m with context %}
 <section class="page" id="page-preferences" hidden>
 <div class="intro">
 <h1>Preferences</h1>
+<p>What your report keeps your armor by and scores your weapons against. A change is saved at once, in this browser only, and the report shows it once it's rebuilt.</p>
 </div>
 
-{# A preference's preferred stats, one cell each. #}
+{# A preference's preferred stats, best first, a dropdown each: None, or a stat no earlier pick has; one is off until the pick before it is made. #}
 {% macro picks(p) %}
-{% if p.stat_1 %}
-{% for key in [p.stat_1, p.stat_2, p.stat_3] %}
-<td>{% if key %}<span class="stat-pick"><img src="{{ stat_icons[key] }}" alt="" width="16" height="16">{{ stat_names[key] }}</span>{% endif %}</td>
+{% set chosen = [p.stat_1, p.stat_2, p.stat_3] %}
+{% for place in ['1st', '2nd', '3rd'] %}
+{% set i = loop.index0 %}
+<td><select class="pick" data-pick="{{ i }}" aria-label="{{ p.name }}: {{ place }} stat"{% if i and not chosen[i - 1] %} disabled{% endif %}><option value="">None</option>{% for key in stat_short %}<option value="{{ key }}"{% if key == chosen[i] %} selected{% elif key in chosen[:i] %} disabled{% endif %}>{{ stat_names[key] }}</option>{% endfor %}</select></td>
 {% endfor %}
-{% else %}
-<td colspan="3" class="muted">None: scored on the stat total</td>
-{% endif %}
 {% endmacro %}
 
 {# An armor set's or exotic's badge: a piece's icon and watermark, whose tooltip is the tip-<tip> block. A set has one per class. #}
@@ -25,12 +24,15 @@
 <div class="folds">
 <details class="fold">
 <summary>{{ m.chevron() }}<h2>Armor stat preferences <span class="num">{{ set_preferences|length }}</span></h2></summary>
+<p class="fold-note">A set's stats in priority order, left to right: each piece scores 3 × its 1st stat + 2 × its 2nd + 1 × its 3rd (its stat total with none picked), and the set keeps its best-scoring pieces. Its grade sets how many it keeps of each piece per class ({% for g in grades %}{{ g.grade or g.label }} {{ g.slot_cap }}{% if not loop.last %}, {% endif %}{% endfor %}). ▲ and ▼ change its place in the grade: when a three-stat build needs a piece past its set's cap, the better-placed set's comes first. A set given another grade goes last in it.</p>
 <div class="scroll">
-<table class="prefs">
+<table class="prefs sets">
 <thead><tr><th scope="col">Grade</th><th scope="col">Set</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
 <tbody>
 {% for p in set_preferences %}
-<tr><td title="{{ p.grade_label }}"><b>{{ p.grade or '–' }}</b></td><th scope="row"><span class="pref-name"><span class="badges">{% for b in badges_by_set.get(p.set_hash, []) %}{{ badge(b, 'set-' ~ p.set_hash) }}{% endfor %}</span>{{ p.name }}</span></th>{{ picks(p) }}</tr>
+{% set first = loop.first or loop.previtem.grade != p.grade %}
+{% set last = loop.last or loop.nextitem.grade != p.grade %}
+<tr data-name="{{ p.name }}"><td><span class="place"><select class="pref-grade" aria-label="{{ p.name }}: grade">{% if not p.grade %}<option value="" selected disabled>Unclassified</option>{% endif %}{% for g in grades if g.grade %}<option value="{{ g.grade }}"{% if g.grade == p.grade %} selected{% endif %}>{{ g.grade }} · {{ g.label }}</option>{% endfor %}</select><button type="button" class="move" data-move="-1" aria-label="Move {{ p.name }} up in its grade" aria-disabled="{{ first|lower }}">▲</button><button type="button" class="move" data-move="1" aria-label="Move {{ p.name }} down in its grade" aria-disabled="{{ last|lower }}">▼</button></span></td><th scope="row"><span class="pref-name"><span class="badges">{% for b in badges_by_set.get(p.set_hash, []) %}{{ badge(b, 'set-' ~ p.set_hash) }}{% endfor %}</span>{{ p.name }}</span></th>{{ picks(p) }}</tr>
 {% endfor %}
 </tbody>
 </table>
@@ -39,6 +41,7 @@
 
 <details class="fold">
 <summary>{{ m.chevron() }}<h2>Exotics stat preferences <span class="num">{{ exotic_preferences|length }}</span></h2></summary>
+<p class="fold-note">An exotic's stats in priority order, left to right: your copies of it score 3 × the 1st + 2 × the 2nd + 1 × the 3rd (their stat total with none picked), and the best-scoring copy is kept.</p>
 {% for armor_class, exotics in exotic_preferences|group('armor_class') %}
 <details class="fold">
 <summary>{{ m.chevron() }}<h3>{{ armor_class or 'Not in the manifest' }} <span class="num">{{ exotics|length }}</span></h3></summary>
@@ -47,7 +50,7 @@
 <thead><tr><th scope="col">Exotic</th><th scope="col">1st ×3</th><th scope="col">2nd ×2</th><th scope="col">3rd ×1</th></tr></thead>
 <tbody>
 {% for p in exotics %}
-<tr><th scope="row"><span class="pref-name">{{ badge(p, 'exo-' ~ p.item_hash) }}{{ p.name }}</span></th>{{ picks(p) }}</tr>
+<tr data-name="{{ p.name }}"><th scope="row"><span class="pref-name">{{ badge(p, 'exo-' ~ p.item_hash) }}{{ p.name }}</span></th>{{ picks(p) }}</tr>
 {% endfor %}
 </tbody>
 </table>
@@ -59,17 +62,36 @@
 <details class="fold">
 <summary>{{ m.chevron() }}<h2>Wishlists <span class="num">{{ wishlists|length }}</span></h2></summary>
 <div class="scroll">
-<table class="prefs">
-<thead><tr><th scope="col">Wishlist</th><th scope="col">Key</th><th scope="col">File</th></tr></thead>
+<table class="prefs lists">
+<thead><tr><th scope="col">Wishlist</th><th scope="col">Key</th><th scope="col">File</th><td></td></tr></thead>
 <tbody>
 {% for w in wishlists %}
-<tr><th scope="row">{{ w.label }}</th><td class="num">{{ w.key }}</td><td><a href="{{ w.url }}" title="{{ w.url }}">{{ w.url.split('/')[-1] or w.url }}</a></td></tr>
+<tr{% if w.own %} class="own"{% endif %}><th scope="row">{{ w.label }}</th><td class="num">{{ w.key }}</td><td><a href="{{ w.url }}" title="{{ w.url }}">{{ w.url.split('/')[-1] or w.url }}</a></td><td>{% if w.own %}<button type="button" class="act remove" data-key="{{ w.key }}" aria-label="Remove {{ w.label }}">Remove</button>{% endif %}</td></tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
+<form class="pref-form add-list">
+<p>Every report scores your weapons against the lists above, and you can add another DIM wishlist by the URL of its .txt file. Your browser downloads it each time the report is built, so the file's host has to allow cross-site requests: GitHub's raw files (raw.githubusercontent.com) and gists do.</p>
+<label>Name <input name="label" required autocomplete="off"></label>
+<label>URL of its .txt file <input name="url" type="url" required autocomplete="off"></label>
+<button class="act">Add the wishlist</button>
+</form>
+</details>
+
+<details class="fold">
+<summary>{{ m.chevron() }}<h2>Backup and defaults</h2></summary>
+<div class="pref-form">
+<p>Your preferences and wishlists are kept only in this browser. Export saves them to a file; importing one replaces them, here or in another browser.</p>
+<button type="button" class="act export">Export to a file</button>
+<label>Import from a file <input type="file" class="import" accept=".json,application/json"></label>
+<p>Reset: your armor preferences go, sets and exotics alike, and the next build starts from the site's defaults, as a new player's does (a set or exotic they leave out is filled in from its bonuses). Your own wishlists stay.</p>
+<button type="button" class="act purge reset">Reset armor preferences to defaults</button>
+</div>
 </details>
 </div>
+
+<div class="pref-bar"><p class="pref-status" role="status"></p><p class="pref-stale" hidden>The report still shows your previous preferences. <button type="button" class="act rebuild">Rebuild the report</button></p></div>
 
 <div hidden>
 {% for p in set_preferences if p.set_hash %}

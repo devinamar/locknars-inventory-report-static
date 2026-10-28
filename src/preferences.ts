@@ -1,22 +1,12 @@
 // The player's armor preferences outside their storage (src/saved.ts): written
 // into the database over the shared defaults before each build's analysis,
-// read back after it with what the CLI's editor showed beside each one, edited
-// on the settings page, and checked when a backup file brings them in. Saved
-// as armor_preference rows (PreferenceRow); store.ts's Prefs for the analysis
-// and the editing.
+// read back after it, edited in the report's Preferences tab
+// (src/preferences-tab.ts), and checked when a backup file brings them in.
+// Saved as armor_preference rows (PreferenceRow); store.ts's Prefs for the
+// analysis and the editing.
 import { type Database } from '@sqlite.org/sqlite-wasm'
-import { load as loadAegis } from './analyze/aegis-rankings.ts'
 import { GRADE_ORDER } from './analyze/armor-grades.ts'
-import { loadArmor } from './analyze/inventory.ts'
-import { formatExoticEffect, formatSetBonus } from './analyze/prefs/editor.ts'
-import {
-  buildExoticEffectMap,
-  buildSetBonusMap,
-  ciGet,
-  loadPreferences,
-  type Prefs,
-  savePreferences,
-} from './analyze/prefs/store.ts'
+import { ciGet, loadPreferences, type Prefs, savePreferences } from './analyze/prefs/store.ts'
 import { ARMOR_STAT_NAMES, type ArmorPreference } from './models.ts'
 import { type PreferenceRow, type Saved } from './saved.ts'
 import { sourceKey, sourceProblem, type WishlistSource } from './wishlists.ts'
@@ -63,24 +53,6 @@ export function applyPreferences(db: Database, rows: PreferenceRow[]): void {
 // order: sets by grade and rank, then exotics by name.
 export function preferenceRows(db: Database): PreferenceRow[] {
   return toRows(loadPreferences(db))
-}
-
-// What the CLI's editor showed with each preference, by name: a set's 2- and
-// 4-piece bonuses (for a set the player has a piece of) and The Aegis's lines
-// for them, each with its grade; an exotic's effect (for one they have). A
-// preference with nothing to show has no note.
-export function preferenceNotes(db: Database): Record<string, string> {
-  const armor = loadArmor(db)
-  const aegis = loadAegis(db)
-  const bonusMap = buildSetBonusMap(armor)
-  const effectMap = buildExoticEffectMap(armor)
-  // What each says when it knows nothing.
-  const unknown = [formatSetBonus('', aegis), formatExoticEffect('')]
-  const notes = [...loadPreferences(db)].map(([name, pref]) => [
-    name,
-    pref.isExotic ? formatExoticEffect(name, effectMap) : formatSetBonus(name, aegis, bonusMap),
-  ])
-  return Object.fromEntries(notes.filter(([, note]) => !unknown.includes(note)))
 }
 
 // pref with stat (null for None) as its pick i (0 to 2), the picks kept in
@@ -131,7 +103,7 @@ function rowProblem(row: Record<string, unknown>): string {
   return ''
 }
 
-// The settings in a backup file (text, as the settings page's Export writes
+// The settings in a backup file (text, as the Preferences tab's Export writes
 // it: { version: 1, preferences, wishlists }), checked strictly, since a file
 // can hold anything: each preference an armor_preference row with known stats
 // and grade, no name twice (ignoring case); each wishlist one sourceProblem

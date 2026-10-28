@@ -64,7 +64,7 @@ export function sourceKey(label: string): string {
 
 // Why a source of the player's can't join sources: a URL that isn't http(s),
 // a label without a letter or digit, or a key or URL one of sources has; ''
-// when it can. The settings page checks a new source with it, before any db.
+// when it can. The Preferences tab checks a new source with it, before any db.
 export function sourceProblem(sources: WishlistSource[], label: string, url: string): string {
   const key = sourceKey(label)
   const clash = sources.find((s) => s.key === key || s.url === url)

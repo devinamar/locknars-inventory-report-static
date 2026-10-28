@@ -8,8 +8,8 @@
 // starts ({ start: label }) and finishes ({ done: label }), or fails without
 // failing the report ({ failed: label, reason }: one of the player's own
 // wishlists), then sends the report's HTML with the preferences it ended with
-// and what the settings page shows beside them ({ html, preferences, notes,
-// wishlists }), or what went wrong ({ error }). One worker builds one report.
+// ({ html, preferences }), or what went wrong ({ error }). One worker builds
+// one report.
 import type { DimSync } from './dim.ts'
 import type { Saved } from './saved.ts'
 
@@ -38,7 +38,7 @@ try {
     { analyzeArmor, analyzeWeapons },
     { loadReport },
     { renderBody },
-    { applyPreferences, preferenceNotes, preferenceRows },
+    { applyPreferences, preferenceRows },
     { addWishlist },
   ] = await Promise.all([
     job,
@@ -56,9 +56,8 @@ try {
   // DIM's tags go on the copies just saved.
   saveDimAnnotations(db, dim)
   applyPreferences(db, preferences)
-  // The wishlists every report uses, which the settings page checks a new
-  // one against.
-  const defaults = db.selectObjects('SELECT key, label, url FROM wishlist_preference ORDER BY rowid')
+  // The wishlists every report uses, before the player's own.
+  const defaults = new Set(db.selectValues('SELECT key FROM wishlist_preference'))
   for (const { label, url } of wishlists) {
     const line = `Downloading your wishlist ${label}`
     postMessage({ start: line })
@@ -68,8 +67,10 @@ try {
   await step('Scoring your weapons against the wishlists', () => analyzeWeapons(db))
   await step('Scoring your armor', () => analyzeArmor(db))
   const data = await step("Gathering the report's data", () => loadReport(db))
+  // The player's own wishlists, which the Preferences tab can remove.
+  for (const w of data.wishlists) w.own = !defaults.has(w.key)
   const html = await step('Rendering the report', () => renderBody(data, bungieName))
-  postMessage({ html, preferences: preferenceRows(db), notes: preferenceNotes(db), wishlists: defaults })
+  postMessage({ html, preferences: preferenceRows(db) })
 } catch (error) {
   postMessage({ error: String(error) })
 }

@@ -202,7 +202,7 @@ test('addSource refuses a bad URL or label, or a taken one', () => {
   expect(db.selectValue('SELECT COUNT(*) FROM wishlist_preference')).toBe(count)
 })
 
-test('the settings page checks a source by the same rules, without a db', () => {
+test('the Preferences tab checks a source by the same rules, without a db', () => {
   // Against the sources it knows of: the defaults and the player's.
   const sources = [{ key: 'voltron', label: 'Voltron', url: 'https://example.com/voltron.txt' }]
   expect(sourceProblem(sources, 'My List!', 'https://example.com/list.txt')).toBe('')
