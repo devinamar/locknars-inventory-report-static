@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "data": "node build/data.ts public",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

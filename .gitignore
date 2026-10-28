@@ -1,3 +1,6 @@
 node_modules/
 dist/
 *.local
+# The data build's output, when run locally for the dev server (npm run data)
+/public/static.db.gz
+/public/version.json
