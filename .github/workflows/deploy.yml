@@ -28,7 +28,13 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run check
+      # The live Bungie app's credentials go into the page: its key only
+      # works from the site's address, and Bungie sends logins only there.
       - run: npm run build
+        env:
+          VITE_BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
+          VITE_BUNGIE_CLIENT_ID: ${{ secrets.BUNGIE_CLIENT_ID }}
+          VITE_BUNGIE_CLIENT_SECRET: ${{ secrets.BUNGIE_CLIENT_SECRET }}
       - run: node build/data.ts dist
         env:
           BUNGIE_API_KEY: ${{ secrets.BUNGIE_API_KEY }}
