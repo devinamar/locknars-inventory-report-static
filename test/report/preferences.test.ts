@@ -168,6 +168,12 @@ test('the tab adds a wishlist, backs up, resets and offers the rebuild, every co
   expect(page).toContain(
     '<label>Import from a file <input type="file" class="import" accept=".json,application/json"></label>',
   )
+  // Beside them, the report itself as Markdown (src/preferences-tab.ts hides
+  // both parts for a report kept without its copy).
+  expect(page).toContain(
+    '<p class="markdown">The report itself can be saved as Markdown, the copy the CLI also wrote for reading ' +
+      'it with an LLM.</p>\n<button type="button" class="act markdown">Export the report as Markdown</button>',
+  )
   expect(page).toContain('<button type="button" class="act purge reset">Reset armor preferences to defaults</button>')
   // The bar's status, empty until a change, and its rebuild, hidden until
   // the report shows other settings than those saved.

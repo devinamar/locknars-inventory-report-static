@@ -60,18 +60,7 @@ function showReport(report: CachedReport) {
   const script = document.createElement('script')
   script.src = reportJs
   document.body.append(script)
-  import('./preferences-tab.ts').then((tab) => tab.setup(report.settings))
-  // The Markdown copy, last among the report's page links, named as the CLI
-  // named its file.
-  const nav = document.querySelector('header.top nav')
-  if (report.markdown && nav) {
-    const link = Object.assign(document.createElement('a'), {
-      textContent: 'Markdown ↓',
-      href: URL.createObjectURL(new Blob([report.markdown], { type: 'text/markdown' })),
-      download: `d2_report_${report.bungieName.split('#')[0]}.md`,
-    })
-    nav.append(link)
-  }
+  import('./preferences-tab.ts').then((tab) => tab.setup(report.settings, report.markdown, report.bungieName))
 }
 
 // The corner panel over a report from the cache, which the boot log moves to.

@@ -110,8 +110,10 @@ function listRow({ key, label, url }: WishlistSource): HTMLTableRowElement {
 }
 
 // Make the tab's controls work, for a report built with the settings
-// builtWith (as JSON: CachedReport's settings).
-export function setup(builtWith: string): void {
+// builtWith (as JSON: CachedReport's settings), whose Markdown copy is
+// markdown (none for a report kept from before there was one), for the player
+// bungieName (Name#1234).
+export function setup(builtWith: string, markdown?: string, bungieName = ''): void {
   const tab = document.getElementById('page-preferences')
   // A report kept from before the tab had controls has none to set up.
   if (!tab?.querySelector('.pref-bar')) return
@@ -238,6 +240,17 @@ export function setup(builtWith: string): void {
     const day = new Date().toISOString().slice(0, 10)
     el('a', { href: URL.createObjectURL(file), download: `d2-report-preferences-${day}.json` }).click()
   })
+
+  // The report as Markdown, named as the CLI named its file; a report kept
+  // from before there was a copy has no button for it.
+  if (markdown) {
+    $('button.markdown').addEventListener('click', () => {
+      const file = new Blob([markdown], { type: 'text/markdown' })
+      el('a', { href: URL.createObjectURL(file), download: `d2_report_${bungieName.split('#')[0]}.md` }).click()
+    })
+  } else {
+    for (const part of tab.querySelectorAll<HTMLElement>('.markdown')) part.hidden = true
+  }
 
   // A backup file's settings in place of these, if every part of it checks
   // out.
